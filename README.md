@@ -2,7 +2,15 @@
   <img src="public/assets/images/logo.svg" width="250" alt="Logo" >
 </p>
 
-<h1 align="center">Dreeve</h1>
+<h1 align="center">Aerolap</h1>
+<h3 align="center">Advanced Running Analytics & AI Coaching Edition of Dreeve</h3>
+
+> [!NOTE]
+> **Aerolap** extends upstream [Dreeve](https://github.com/dreeveapp/dreeve) with Jack Daniels / Joe Friel 5-zone physiological pace profiling, Aerobic Decoupling & Cardiac Drift analytics, sub-second telemetry stream audits, mobile REST API endpoints for companion tracking apps, and expanded AI coach tools.
+> Detailed system architecture, guides, and developer documentation:
+> - **[RUNWISE_SYSTEM_DESIGN_AND_DEVELOPER_GUIDE.md](RUNWISE_SYSTEM_DESIGN_AND_DEVELOPER_GUIDE.md)**
+> - **[FORK_AND_ARCHITECTURE_GUIDE.md](FORK_AND_ARCHITECTURE_GUIDE.md)**
+> - **[AI_AGENT_GUIDE.md](AI_AGENT_GUIDE.md)**
 
 <p align="center">
 <a href="https://raw.githubusercontent.com/dreeveapp/dreeve/refs/heads/master/LICENSE"><img src="https://img.shields.io/github/license/dreeveapp/dreeve?color=428f7e&logo=open%20source%20initiative&logoColor=white" alt="License"></a>

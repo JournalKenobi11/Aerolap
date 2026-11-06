@@ -8,6 +8,7 @@ enum NavigationSection: string
 {
     case DASHBOARD = 'dashboard';
     case ACTIVITIES = 'activities';
+    case RUN_PLAN = 'run-plan';
     case GEAR = 'gear';
     case SEGMENTS = 'segments';
     case MONTHLY_STATS = 'monthly-stats';

@@ -122,16 +122,21 @@ final readonly class ChatRequestHandler
                     type: 'removeThinking'
                 ));
 
-                $message = $e->getMessage();
+                $errorMessage = $e->getMessage();
                 if ($e instanceof ClientException) {
-                    $message = $e->getResponse()->getBody()->getContents(); // @codeCoverageIgnore
+                    $errorMessage = $e->getResponse()->getBody()->getContents(); // @codeCoverageIgnore
                 }
 
-                $fullMessage = 'Oh no, I made a booboo... <br />'.preg_replace('/\s+/', ' ', $message);
+                $fullMessage = 'Oh no, I made a booboo... <br />'.preg_replace('/\s+/', ' ', $errorMessage);
 
                 $response->sendEvent(new ServerSentEvent(
                     data: $fullMessage,
                     type: 'agentResponse'
+                ));
+
+                $this->commandBus->dispatch(new AddChatMessage(
+                    message: $message,
+                    messageRole: MessageRole::USER,
                 ));
 
                 $this->commandBus->dispatch(new AddChatMessage(

@@ -15,6 +15,7 @@ use App\Domain\Activity\EnrichedActivityRepository;
 use App\Domain\Activity\GpxFileName;
 use App\Domain\Activity\Lap\ActivityLapRepository;
 use App\Domain\Activity\LeafletMap;
+use App\Domain\Activity\Running\RunningAnalyticsService;
 use App\Domain\Activity\Shifting\ActivityDrivetrainUsageRepository;
 use App\Domain\Activity\Shifting\ActivityDrivetrainUsages;
 use App\Domain\Activity\Split\ActivitySplitRepository;
@@ -65,6 +66,7 @@ final readonly class ActivityRequestHandler
         private Visitor $visitor,
         private FileImportRepository $fileImportRepository,
         private Environment $twig,
+        private RunningAnalyticsService $runningAnalyticsService,
     ) {
     }
 
@@ -133,6 +135,8 @@ final readonly class ActivityRequestHandler
         } catch (EntityNotFound) {
         }
 
+        $runningAnalytics = $this->runningAnalyticsService->analyzeRunActivity($activityId);
+
         $templateName = sprintf('html/activity/%s.html.twig', $activity->getSportType()->getTemplateName());
 
         return $this->twig->load($templateName)->render(context: [
@@ -158,6 +162,10 @@ final readonly class ActivityRequestHandler
             ),
             'hasProfileChart' => $numberOfProfileChartLanes > 0,
             'heartRateZones' => $timeInHeartRateZones,
+            'paceZones' => $runningAnalytics['paceZones'],
+            'aerobicDecoupling' => $runningAnalytics['decoupling'],
+            'runningEffort' => $runningAnalytics['effortScore'],
+            'runningDataQuality' => $runningAnalytics['dataQuality'],
             'showStartTime' => $this->visitor->isTrusted(),
             'drivetrainUsages' => $activity->getSportType()->supportsShiftingStats()
                 ? $this->activityDrivetrainUsageRepository->findByActivity($activityId)

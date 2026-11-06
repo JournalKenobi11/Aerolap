@@ -6,7 +6,7 @@ namespace App\Application;
 
 final readonly class AppName implements \Stringable
 {
-    public const string LABEL = 'Dreeve';
+    public const string LABEL = 'Aerolap';
 
     public function __toString(): string
     {

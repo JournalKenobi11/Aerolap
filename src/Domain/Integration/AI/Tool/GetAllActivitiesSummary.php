@@ -36,7 +36,12 @@ final class GetAllActivitiesSummary extends Tool
             ->slice(0, 250)
             ->map(fn (Activity $activity): array => [
                 'id' => $activity->getId()->toUnprefixedString(),
-                'on' => $activity->getStartDate()->format('Y-m-d'),
+                'date' => $activity->getStartDate()->format('Y-m-d'),
+                'sport' => $activity->getSportType()->value,
+                'name' => $activity->getName(),
+                'distance_km' => round($activity->getDistance()->toFloat(), 2),
+                'moving_time' => $activity->getMovingTimeFormatted(),
+                'avg_hr' => $activity->getAverageHeartRate(),
             ]);
 
         return [

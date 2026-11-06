@@ -88,6 +88,22 @@
                             {{ activity.getDeviceName() ?: 'None'|trans }}
                     </span>
                 </a>
+                {% if runningEffort %}
+                    <div class="bg-gray-50 rounded-lg p-3 flex gap-x-2 items-center justify-between">
+                        <span class="text-xs text-gray-500 shrink-0">{{ "Effort"|trans }}</span>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded border {{ runningEffort.getBadgeColor() }}">
+                            Score {{ runningEffort.getScore() }}
+                        </span>
+                    </div>
+                {% endif %}
+                {% if runningDataQuality %}
+                    <div class="bg-gray-50 rounded-lg p-3 flex gap-x-2 items-center justify-between">
+                        <span class="text-xs text-gray-500 shrink-0">{{ "Integrity"|trans }}</span>
+                        <span class="text-xs font-bold px-2 py-0.5 rounded border {{ runningDataQuality.badgeColor }}">
+                            {{ runningDataQuality.rating }}
+                        </span>
+                    </div>
+                {% endif %}
             </div>
         </section>
     {% endautoescape %}
@@ -199,5 +215,191 @@
                 {% endif %}
             </div>
         </section>
+
+        {% if paceZones and paceZones.getTotalMovingTimeInSeconds() > 0 %}
+            <section class="rounded-lg bg-white border border-gray-200 shadow-xs p-5 mt-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="size-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center">
+                            {{ svg('speed', 'size-5') }}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900">{{ "Running Pace Zones"|trans }}</h3>
+                            <span class="text-xxs text-gray-400">{{ "Time-weighted distribution across physiological pace thresholds"|trans }}</span>
+                        </div>
+                    </div>
+                    {% if paceZones.getExcludedPercentage() > 2 %}
+                        <span class="text-xxs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md" title="Stationary or paused time excluded from pace calculations">
+                            {{ paceZones.getExcludedPercentage() }}% paused / stationary
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="space-y-3">
+                    {% for row in paceZones.toViewRows() %}
+                        <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs">
+                            <div class="w-40 flex items-center justify-between shrink-0">
+                                <span class="font-semibold text-gray-900">{{ row.label }}</span>
+                                <span class="text-xxs font-mono text-gray-500">{{ row.range }}</span>
+                            </div>
+                            <div class="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden flex">
+                                <div class="h-full rounded-full transition-all duration-300" style="width: {{ row.percentage }}%; background-color: {{ row.color }};"></div>
+                            </div>
+                            <div class="w-36 flex items-center justify-end gap-2 shrink-0 tabular-nums">
+                                <span class="text-gray-900 font-bold w-12 text-right">{{ row.percentage }}%</span>
+                                <span class="text-gray-500 w-14 text-right">{{ row.formattedTime }}</span>
+                                <span class="text-gray-400 text-xxs w-12 text-right">{{ (row.distanceMeters / 1000)|round(1) }} km</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+
+        {% if aerobicDecoupling %}
+            <section class="rounded-lg bg-white border border-gray-200 shadow-xs p-5 mt-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <div class="size-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center">
+                            {{ svg('heart-rate', 'size-5') }}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900">{{ "Aerobic Decoupling & Cardiac Drift"|trans }}</h3>
+                            <span class="text-xxs text-gray-400">{{ "Cardiovascular stability comparing 1st half vs 2nd half of steady effort"|trans }}</span>
+                        </div>
+                    </div>
+                    {% if aerobicDecoupling.isEligible() %}
+                        <span class="text-xs font-bold px-2.5 py-1 rounded-full {{ aerobicDecoupling.getAssessmentColor() }} bg-opacity-10 border border-current">
+                            {{ aerobicDecoupling.getDecouplingPercentage() > 0 ? '+' : '' }}{{ aerobicDecoupling.getDecouplingPercentage() }}% Decoupling
+                        </span>
+                    {% else %}
+                        <span class="text-xxs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md" title="{{ aerobicDecoupling.getIneligibilityReason() }}">
+                            Not eligible: {{ aerobicDecoupling.getIneligibilityReason() }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if aerobicDecoupling.isEligible() %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <div class="text-xxs uppercase tracking-wider font-semibold text-gray-500 mb-1">First Half (Steady Base)</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <div class="text-xxs text-gray-400">Avg Pace</div>
+                                    <div class="text-sm font-black text-gray-900">{{ aerobicDecoupling.getFormattedPace(aerobicDecoupling.getHalfOneAvgPace()) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xxs text-gray-400">Avg HR</div>
+                                    <div class="text-sm font-black text-gray-900">{{ aerobicDecoupling.getHalfOneAvgHeartRate() }} <span class="text-xxs font-normal">bpm</span></div>
+                                </div>
+                                <div>
+                                    <div class="text-xxs text-gray-400">Efficiency (EF)</div>
+                                    <div class="text-sm font-black text-gray-900">{{ aerobicDecoupling.getHalfOneEfficiencyFactor() }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                            <div class="text-xxs uppercase tracking-wider font-semibold text-gray-500 mb-1">Second Half (Sustained)</div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <div class="text-xxs text-gray-400">Avg Pace</div>
+                                    <div class="text-sm font-black text-gray-900">{{ aerobicDecoupling.getFormattedPace(aerobicDecoupling.getHalfTwoAvgPace()) }}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xxs text-gray-400">Avg HR</div>
+                                    <div class="text-sm font-black text-gray-900">{{ aerobicDecoupling.getHalfTwoAvgHeartRate() }} <span class="text-xxs font-normal">bpm</span></div>
+                                </div>
+                                <div>
+                                    <div class="text-xxs text-gray-400">Efficiency (EF)</div>
+                                    <div class="text-sm font-black text-gray-900">{{ aerobicDecoupling.getHalfTwoEfficiencyFactor() }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-lg bg-gray-50 text-xs text-gray-600 flex items-start gap-2">
+                        <div class="font-bold {{ aerobicDecoupling.getAssessmentColor() }} shrink-0">Analysis:</div>
+                        <div>
+                            {{ aerobicDecoupling.getAssessment() }}. Cardiac drift: <strong>{{ aerobicDecoupling.getHeartRateDriftBpm() > 0 ? '+' : '' }}{{ aerobicDecoupling.getHeartRateDriftBpm() }} bpm</strong>. Joe Friel sports physiology benchmark: decoupling under 5% demonstrates complete aerobic efficiency and endurance base for this workout duration.
+                        </div>
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+
+        {% if runningEffort %}
+            <section class="rounded-lg bg-white border border-gray-200 shadow-xs p-5 mt-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="size-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center">
+                            {{ svg('fire', 'size-5') }}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900">{{ "Session Relative Effort & Recovery Window"|trans }}</h3>
+                            <span class="text-xxs text-gray-400">{{ "Cardiovascular load score and estimated physiological recovery period"|trans }}</span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold px-3 py-1 rounded-full border {{ runningEffort.getBadgeColor() }}">
+                        Score {{ runningEffort.getScore() }} · {{ runningEffort.getLabel() }}
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600">
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <div class="font-semibold text-gray-900 mb-1">Effort Classification</div>
+                        <p>{{ runningEffort.getDescription() }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-3">
+                        <div class="font-semibold text-gray-900 mb-1 flex items-center justify-between">
+                            <span>Recommended Recovery</span>
+                            <span class="text-primary font-bold">~{{ runningEffort.getEstimatedRecoveryHours() }} Hours</span>
+                        </div>
+                        <p>{{ runningEffort.getRecoveryAdvice() }}</p>
+                        <div class="mt-2 text-xxs text-gray-400">
+                            * Note: Recovery estimate is modeled strictly from workout heart-rate time in zone and duration. Sleep and nocturnal HRV are not recorded in standard GPX files and are not fabricated.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        {% endif %}
+
+        {% if runningDataQuality %}
+            <section class="rounded-lg bg-white border border-gray-200 shadow-xs p-5 mt-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="size-8 rounded-lg bg-primary-soft text-primary flex items-center justify-center">
+                            {{ svg('star', 'size-5') }}
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-gray-900">{{ "Stream Data Integrity"|trans }}</h3>
+                            <span class="text-xxs text-gray-400">{{ runningDataQuality.summary }}</span>
+                        </div>
+                    </div>
+                    <span class="text-xs font-bold px-2.5 py-1 rounded-full border {{ runningDataQuality.badgeColor }}">
+                        {{ runningDataQuality.rating }} ({{ runningDataQuality.score }}/100)
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-3 text-xs">
+                    <div class="bg-gray-50 p-2 rounded">
+                        <div class="text-xxs text-gray-400">HR Sensor Coverage</div>
+                        <div class="font-bold text-gray-800">{{ runningDataQuality.hrCoveragePercent }}%</div>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <div class="text-xxs text-gray-400">Paused / Stationary</div>
+                        <div class="font-bold text-gray-800">{{ runningDataQuality.pausedPercent }}%</div>
+                    </div>
+                    <div class="bg-gray-50 p-2 rounded">
+                        <div class="text-xxs text-gray-400">Telemetry Quality</div>
+                        <div class="font-bold text-gray-800">{{ runningDataQuality.score }} / 100</div>
+                    </div>
+                </div>
+                {% if runningDataQuality.warnings is not empty %}
+                    <div class="mt-2 space-y-1">
+                        {% for warning in runningDataQuality.warnings %}
+                            <div class="text-xxs text-amber-700 bg-amber-50 px-2 py-1 rounded border border-amber-200">
+                                ⚠ {{ warning }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
     {% endautoescape %}
 {% endblock splitsAndLaps %}

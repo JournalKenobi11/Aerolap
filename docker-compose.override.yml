@@ -1,0 +1,28 @@
+services:
+  app:
+    image: robiningelbrecht/dreeve:latest
+    build: !reset null
+    container_name: dreeve
+    restart: unless-stopped
+    volumes:
+      - ./src:/var/www/src:ro
+      - ./templates:/var/www/templates:ro
+      - ./tests:/var/www/tests:ro
+      - ./bin:/var/www/bin:ro
+    networks:
+      - statistics-for-strava-network
+      - homelab
+  daemon:
+    image: robiningelbrecht/dreeve:latest
+    build: !reset null
+    container_name: dreeve-daemon
+    volumes:
+      - ./src:/var/www/src:ro
+      - ./templates:/var/www/templates:ro
+    networks:
+      - statistics-for-strava-network
+
+networks:
+  homelab:
+    name: homelab
+    external: true

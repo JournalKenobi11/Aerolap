@@ -14,7 +14,7 @@ services:
               required: false
         environment:
             - PHP_IDE_CONFIG=phpstorm
-            - TZ=Europe/Brussels
+            - TZ=Asia/Kolkata
         profiles: [on-demand]
         networks:
             - statistics-for-strava-network
@@ -35,7 +35,7 @@ services:
           test: ["CMD", "curl", "-f", "http://localhost:2019/metrics"]
           start_period: 60s
         environment:
-          - TZ=Europe/Brussels
+          - TZ=Asia/Kolkata
         ports:
             - '8081:8080'
         networks:
@@ -58,7 +58,7 @@ services:
         test: [ "CMD", "sh", "-c", "test -f /var/www/storage/database/dreeve.db && echo 'ok' || exit 1" ]
         start_period: 5s
       environment:
-        - TZ=Europe/Brussels
+        - TZ=Asia/Kolkata
       command: ['bin/console', 'app:daemon:run']
       networks:
         - statistics-for-strava-network

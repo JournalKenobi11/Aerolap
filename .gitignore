@@ -43,3 +43,9 @@ phpstan.neon
 /docs/dist
 /docs/.astro
 ###< docs ###
+
+###> android ###
+/android/
+###< android ###
+
+generate_pace_vs_hr_plot.py

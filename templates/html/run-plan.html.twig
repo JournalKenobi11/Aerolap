@@ -1,0 +1,361 @@
+{% include 'html/navigation/breadcrumbs.html.twig' with {'breadcrumbs': [
+    {
+        'url': 'dashboard',
+        'label': 'Dashboard'|trans
+    },
+    {
+        'url': 'run-plan',
+        'label': 'Run plan'|trans
+    }]} %}
+
+<div class="space-y-6">
+    {# Hero Banner & Race Goal #}
+    <div class="p-6 bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white rounded-xl shadow-md">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/20 backdrop-blur-xs mb-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Aerolap Coach</span>
+                    <span>•</span>
+                    <span>10K Race Target: 22nd Nov 2026</span>
+                </div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Aerolap 10K Plan: Target 6:15 min/km</h1>
+                <p class="text-blue-100 text-sm mt-1 max-w-2xl">
+                    Calibrated specifically from your Aerolap training database (CTL: {{ currentCtl }}, ATL: {{ currentAtl }}). Engineered to lock in your 6:15 pace, rebuild single-leg calf capacity, and shed accumulated fatigue for peak race freshness (+7.5 TSB).
+                </p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <button onclick="document.getElementById('import-modal').classList.remove('hidden')" class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm rounded-lg border border-white/25 backdrop-blur-xs transition-colors cursor-pointer">
+                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Import .ics
+                </button>
+                <a href="{{ relativeUrl(path('run_plan_ics')) }}" class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-white text-blue-800 font-semibold text-sm rounded-lg shadow-sm hover:bg-blue-50 transition-colors">
+                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Export .ics
+                </a>
+                <button onclick="document.getElementById('gcal-modal').classList.remove('hidden')" class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm rounded-lg border border-white/20 shadow-sm transition-colors cursor-pointer">
+                    <svg class="size-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                    Google Calendar
+                </button>
+            </div>
+        </div>
+
+        {# Connected Account Status Bar #}
+        <div class="mt-4 pt-3 border-t border-white/15 flex flex-wrap items-center justify-between text-xs text-blue-100 gap-2">
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center justify-center size-4 rounded-full bg-emerald-400 text-gray-900 font-bold text-[10px]">✓</span>
+                <span>Google Calendar Account:</span>
+                <span class="font-mono font-semibold text-white bg-white/10 px-2 py-0.5 rounded">{{ userGmail }}</span>
+                <button onclick="document.getElementById('gmail-modal').classList.remove('hidden')" class="underline hover:text-white cursor-pointer ml-1">Change</button>
+            </div>
+            {% if isCustomPlan %}
+                <div class="flex items-center gap-2 bg-amber-500/30 text-amber-100 px-2.5 py-1 rounded">
+                    <span>Showing custom imported .ics schedule</span>
+                    <form action="{{ relativeUrl(path('run_plan_reset')) }}" method="POST" class="inline">
+                        <button type="submit" class="underline font-bold text-white hover:text-amber-200 cursor-pointer">Reset to 10K Plan</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Physiological Diagnostic Cards #}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-white">
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-xs">
+                <div class="text-xs text-blue-200">Current Fitness (CTL)</div>
+                <div class="text-xl font-bold mt-0.5">{{ currentCtl }}</div>
+                <div class="text-[11px] text-emerald-300">Doubled in Oct (Solid Base)</div>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-xs">
+                <div class="text-xs text-blue-200">Current Fatigue (ATL)</div>
+                <div class="text-xl font-bold mt-0.5">{{ currentAtl }}</div>
+                <div class="text-[11px] text-amber-300">High (Taper Sheds to ~20)</div>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-xs">
+                <div class="text-xs text-blue-200">Form / Freshness (TSB)</div>
+                <div class="text-xl font-bold mt-0.5">{{ currentTsb }} <span class="text-xs font-normal text-blue-200">&rarr;</span> <span class="text-emerald-300">{{ targetRaceTsb }}</span></div>
+                <div class="text-[11px] text-emerald-300">Target +7.5 on Race Day</div>
+            </div>
+            <div class="bg-white/10 rounded-lg p-3 backdrop-blur-xs">
+                <div class="text-xs text-blue-200">Target Pace & Time</div>
+                <div class="text-xl font-bold mt-0.5">{{ targetPace }}</div>
+                <div class="text-[11px] text-purple-200">Goal Finish: {{ targetTime }}</div>
+            </div>
+        </div>
+    </div>
+
+    {# Gmail Setup / Change Modal #}
+    <div id="gmail-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 text-gray-900 border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-lg text-gray-900">
+                    <svg class="size-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                    <span>Connect Google Calendar</span>
+                </div>
+                <button onclick="document.getElementById('gmail-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+            </div>
+            <p class="text-xs text-gray-600">
+                Enter your Gmail address to connect Runwise with your Google Calendar for seamless one-click sync and export.
+            </p>
+            <form action="{{ relativeUrl(path('run_plan_save_gmail')) }}" method="POST" class="space-y-3">
+                <div>
+                    <label for="gmail-input" class="block text-xs font-semibold text-gray-700 uppercase tracking-wide">Gmail Address</label>
+                    <input type="email" id="gmail-input" name="gmail" value="{{ userGmail }}" required class="mt-1 w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="document.getElementById('gmail-modal').classList.add('hidden')" class="px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer">Cancel</button>
+                    <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer">Save & Connect</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Import .ics Modal #}
+    <div id="import-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4 text-gray-900 border border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-lg text-gray-900">
+                    <svg class="size-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span>Import .ics Training Plan</span>
+                </div>
+                <button onclick="document.getElementById('import-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+            </div>
+            <p class="text-xs text-gray-600">
+                Upload any standard <code class="bg-gray-100 text-blue-700 px-1 py-0.5 rounded text-[11px]">.ics</code> calendar file (from Google Calendar, Garmin, TrainingPeaks, or Runwise). It will be parsed and displayed directly in this calendar view.
+            </p>
+            <form action="{{ relativeUrl(path('run_plan_import_ics')) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
+                    <svg class="mx-auto size-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                    <label class="block text-sm font-medium text-gray-700 cursor-pointer">
+                        <span class="text-blue-600 hover:underline">Choose a file</span> or drag and drop
+                        <input type="file" name="ics_file" accept=".ics,text/calendar" class="sr-only" onchange="document.getElementById('file-chosen-name').textContent = this.files[0] ? this.files[0].name : ''">
+                    </label>
+                    <p class="text-[11px] text-gray-500 mt-1">.ICS files up to 10MB</p>
+                    <div id="file-chosen-name" class="mt-2 text-xs font-semibold text-emerald-600"></div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2">
+                    {% if isCustomPlan %}
+                        <button type="button" onclick="document.getElementById('reset-plan-form').submit();" class="text-xs text-red-600 hover:underline cursor-pointer">Revert to 10K Plan</button>
+                    {% else %}
+                        <div></div>
+                    {% endif %}
+                    <div class="flex gap-2">
+                        <button type="button" onclick="document.getElementById('import-modal').classList.add('hidden')" class="px-4 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer">Cancel</button>
+                        <button type="submit" class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs cursor-pointer">Import Plan</button>
+                    </div>
+                </div>
+            </form>
+            <form id="reset-plan-form" action="{{ relativeUrl(path('run_plan_reset')) }}" method="POST" class="hidden"></form>
+        </div>
+    </div>
+
+    {# Google Calendar Sync Helper Box #}
+    <div id="gcal-modal" class="p-5 bg-white border border-blue-200 rounded-xl shadow-xs space-y-3">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-gray-900 font-semibold">
+                <svg class="size-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                <span>Google Calendar Export for <span class="text-blue-600 font-mono">{{ userGmail }}</span></span>
+            </div>
+            <button onclick="document.getElementById('gcal-modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-sm cursor-pointer">✕ Close</button>
+        </div>
+        <p class="text-sm text-gray-600">
+            Export the complete training plan directly into your connected Google Calendar (<span class="font-semibold">{{ userGmail }}</span>):
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+                <div class="font-medium text-sm text-gray-900 flex items-center justify-between">
+                    <span>1-Click Bulk Google Calendar Import</span>
+                    <span class="text-[10px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded font-semibold">Recommended</span>
+                </div>
+                <ol class="text-xs text-gray-600 space-y-1.5 list-decimal list-inside">
+                    <li>Download the full schedule: <a href="{{ relativeUrl(path('run_plan_ics')) }}" class="text-blue-600 font-semibold underline">Runwise_10K_Race_Plan_615.ics</a>.</li>
+                    <li>Open Google Calendar: <a href="https://calendar.google.com/calendar/u/0/r/settings/export" target="_blank" class="text-blue-600 font-semibold underline inline-flex items-center gap-1">Open Google Calendar Settings ↗</a></li>
+                    <li>Upload the <code class="bg-gray-200 px-1 py-0.5 rounded text-[11px]">.ics</code> file and click <strong>Import</strong>. All workouts instantly sync to your Google Calendar & phone!</li>
+                </ol>
+            </div>
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg space-y-2">
+                <div class="font-medium text-sm text-gray-900">Direct Milestone Web Events</div>
+                <p class="text-xs text-gray-600">Add individual key sessions straight to Google Calendar with one click:</p>
+                <div class="flex flex-wrap gap-2 pt-1">
+                    <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Runwise+10K+Race+Day+(Target+6:15/km)&dates=20261122T060000/20261122T073000&details=10K+Race+Day%21+Goal+pace+6:12-6:18/km.+Target+time+1:02:30." target="_blank" class="text-xs px-2.5 py-1.5 bg-red-50 text-red-700 font-semibold border border-red-200 rounded hover:bg-red-100">
+                        🏁 Add Race Day (Nov 22)
+                    </a>
+                    <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Runwise+10K+Pace+Lock+Session+(4x1km+@+6:15)&dates=20261105T070000/20261105T080000&details=1km+warmup+%2B+4x1km+locked+at+6:15/km+%2B+0.5km+cooldown." target="_blank" class="text-xs px-2.5 py-1.5 bg-purple-50 text-purple-700 font-semibold border border-purple-200 rounded hover:bg-purple-100">
+                        ⚡ Add Pace Lock (Nov 05)
+                    </a>
+                    <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Runwise+Peak+Long+Run+Simulation+(8.5km)&dates=20261108T070000/20261108T083000&details=Peak+Long+Run+8.5km%3A+3km+easy+%2B+4km+@+6:15+race+pace+%2B+1.5km+easy." target="_blank" class="text-xs px-2.5 py-1.5 bg-amber-50 text-amber-700 font-semibold border border-amber-200 rounded hover:bg-amber-100">
+                        🏃 Add Peak Long Run (Nov 08)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# 3-Week Calendar Schedule #}
+    {% for week in weeks %}
+        <div class="bg-white border border-gray-200 rounded-xl shadow-xs overflow-hidden">
+            <div class="px-5 py-4 bg-gray-50 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 text-xs font-bold bg-blue-600 text-white rounded">Week {{ week.number }}</span>
+                        <h2 class="text-base font-bold text-gray-900">{{ week.title }}</h2>
+                        <span class="text-xs text-gray-500">({{ week.dates }})</span>
+                    </div>
+                    <div class="text-xs text-gray-600 mt-0.5">
+                        <span class="font-semibold text-gray-700">Focus:</span> {{ week.focus }}
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                    <div class="px-2.5 py-1 bg-white border border-gray-200 rounded-md">
+                        <span class="text-gray-500">Target Volume:</span> <span class="font-semibold text-gray-800">{{ week.targetDistance }}</span>
+                    </div>
+                    <div class="px-2.5 py-1 bg-white border border-gray-200 rounded-md">
+                        <span class="text-gray-500">Form (TSB):</span> <span class="font-semibold text-emerald-600">{{ week.projectedTsb }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {# 7-Day Calendar Grid #}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 divide-y sm:divide-y-0 sm:divide-x divide-gray-200">
+                {% for day in week.days %}
+                    {% set borderTopColor = 'border-t-gray-400' %}
+                    {% set badgeBg = 'bg-gray-100 text-gray-700' %}
+                    {% if day.category == 'race' %}
+                        {% set borderTopColor = 'border-t-red-600' %}
+                        {% set badgeBg = 'bg-red-600 text-white font-bold' %}
+                    {% elseif day.category == 'workout' %}
+                        {% set borderTopColor = 'border-t-purple-600' %}
+                        {% set badgeBg = 'bg-purple-100 text-purple-800' %}
+                    {% elseif day.category == 'long' %}
+                        {% set borderTopColor = 'border-t-amber-500' %}
+                        {% set badgeBg = 'bg-amber-100 text-amber-800' %}
+                    {% elseif day.category == 'easy' %}
+                        {% set borderTopColor = 'border-t-emerald-500' %}
+                        {% set badgeBg = 'bg-emerald-100 text-emerald-800' %}
+                    {% elseif day.category == 'walk' %}
+                        {% set borderTopColor = 'border-t-teal-500' %}
+                        {% set badgeBg = 'bg-teal-100 text-teal-800' %}
+                    {% elseif day.category == 'strength' %}
+                        {% set borderTopColor = 'border-t-blue-500' %}
+                        {% set badgeBg = 'bg-blue-100 text-blue-800' %}
+                    {% endif %}
+
+                    <div class="p-3.5 flex flex-col justify-between border-t-4 {{ borderTopColor }} hover:bg-gray-50/80 transition-colors">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-semibold text-gray-500">{{ day.dayName }} {{ day.dayNumber }}</span>
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full uppercase tracking-wider {{ badgeBg }}">{{ day.badge }}</span>
+                            </div>
+                            <div class="font-bold text-sm text-gray-900 leading-snug line-clamp-1" title="{{ day.title }}">{{ day.title }}</div>
+                            <div class="text-lg font-extrabold text-blue-700 mt-1">{{ day.distance }}</div>
+                            
+                            <div class="mt-2 space-y-1 text-xs">
+                                <div class="text-gray-700">
+                                    <span class="text-gray-400">Pace:</span> <span class="font-medium">{{ day.pace }}</span>
+                                </div>
+                                <div class="text-gray-700">
+                                    <span class="text-gray-400">Target HR:</span> <span class="font-medium text-emerald-700">{{ day.targetHr }}</span>
+                                </div>
+                            </div>
+
+                            <p class="mt-2 text-[11px] text-gray-600 leading-relaxed border-t border-gray-100 pt-1.5">
+                                {{ day.description }}
+                            </p>
+                        </div>
+
+                        {# Exercises Tag & GCal Link #}
+                        <div class="mt-3 pt-2 border-t border-gray-100 space-y-1.5">
+                            {% if day.exercises|length > 0 %}
+                                <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Exercises:</div>
+                                <ul class="text-[11px] text-gray-700 space-y-1">
+                                    {% for ex in day.exercises %}
+                                        <li class="flex items-start gap-1">
+                                            <span class="text-blue-500 font-bold">•</span>
+                                            <span class="leading-tight"><strong class="font-medium">{{ ex.name }}</strong> ({{ ex.reps }})</span>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            
+                            <div class="pt-1.5 flex items-center justify-between">
+                                <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ ('Runwise: ' ~ day.badge ~ ' - ' ~ day.title)|url_encode }}&dates={{ day.date|replace({'-': ''}) }}T070000/{{ day.date|replace({'-': ''}) }}T080000&details={{ day.description|url_encode }}" target="_blank" class="text-[10px] text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-0.5">
+                                    <svg class="size-3" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+                                    + GCal
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+
+    {# Reference Protocols Card #}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {# Protocol 1: Calves #}
+        <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-xs space-y-3">
+            <div class="flex items-center gap-2 text-gray-900 font-bold text-sm">
+                <div class="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
+                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <span>Calf Rehabilitation Protocol</span>
+            </div>
+            <p class="text-xs text-gray-600">
+                Specifically targets your low single-leg calf capacity to prevent Achilles fatigue past Km 6:
+            </p>
+            <ul class="text-xs text-gray-700 space-y-2 list-disc list-inside">
+                <li><strong>Eccentric Heel Drops:</strong> Rise on two feet on a step, lower on one leg for 3 full seconds below the step. <em>3 × 8–10 / leg.</em></li>
+                <li><strong>Bent-Knee Calf Raises:</strong> Maintain a 30° knee bend to isolate the soleus. Hold 2kg dumbbells. <em>3 × 15 reps.</em></li>
+                <li><strong>Single-Leg Wall Hold:</strong> Rise to mid-height on one foot and hold for 25 seconds. <em>3 sets / leg.</em></li>
+            </ul>
+        </div>
+
+        {# Protocol 2: Home Strength #}
+        <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-xs space-y-3">
+            <div class="flex items-center gap-2 text-gray-900 font-bold text-sm">
+                <div class="p-1.5 bg-blue-100 text-blue-800 rounded-lg">
+                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+                </div>
+                <span>Home Strength (2kg Dumbbells)</span>
+            </div>
+            <p class="text-xs text-gray-600">
+                Maintains hip alignment, pelvic stability, and knee tracking under fatigue:
+            </p>
+            <ul class="text-xs text-gray-700 space-y-2 list-disc list-inside">
+                <li><strong>Goblet Squat to Calf Press:</strong> Squat down, drive up onto toes at the top holding both 2kg DBs. <em>3 × 12 reps.</em></li>
+                <li><strong>Reverse Lunges:</strong> Step back, keeping front knee tracking over midfoot. <em>3 × 10 reps / leg.</em></li>
+                <li><strong>Single-Leg Romanian Deadlift:</strong> Hinge at hip with opposite hand holding DB. <em>3 × 8–10 / leg.</em></li>
+                <li><strong>Side Plank Clamshells:</strong> Strengthens gluteus medius to stop hip drop. <em>3 × 15 / side.</em></li>
+            </ul>
+        </div>
+
+        {# Protocol 3: Stretching & Mobility #}
+        <div class="p-5 bg-white border border-gray-200 rounded-xl shadow-xs space-y-3">
+            <div class="flex items-center gap-2 text-gray-900 font-bold text-sm">
+                <div class="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg">
+                    <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <span>Post-Run Mobility & Stretches</span>
+            </div>
+            <p class="text-xs text-gray-600">
+                Execute immediately post-run while muscle tissues are warm:
+            </p>
+            <ul class="text-xs text-gray-700 space-y-2 list-disc list-inside">
+                <li><strong>Straight-Leg Wall Stretch:</strong> Gastrocnemius focus. Heel pressed into floor. <em>40 sec / leg.</em></li>
+                <li><strong>Bent-Knee Wall Stretch:</strong> Soleus & Achilles focus. Back knee bent. <em>40 sec / leg.</em></li>
+                <li><strong>Kneeling Hip Flexor Stretch:</strong> Tuck pelvis under and lean forward. <em>45 sec / side.</em></li>
+                <li><strong>Figure-4 Glute Stretch:</strong> Relieves piriformis tightness. <em>45 sec / side.</em></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{# Onboarding Auto-Popup script if first time #}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (!localStorage.getItem('runwise_coach_onboarded')) {
+            document.getElementById('gmail-modal').classList.remove('hidden');
+            localStorage.setItem('runwise_coach_onboarded', 'true');
+        }
+    });
+</script>
