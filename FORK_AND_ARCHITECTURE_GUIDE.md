@@ -30,7 +30,10 @@ Before staging files, verify that no personal database files, API secrets, or lo
    - `/storage` and `*.db*` (your SQLite database `storage/database/dreeve.db` will **not** be committed).
    - `/.env.local`, `/.env.*.local` (local secrets).
    - `/var/` (Symfony cache & logs).
-2. **Decide on Helper Files**:
+2. **Environment Configuration**:
+   - Copy `.env.example` to `.env.local`: `cp .env.example .env.local`
+   - Fill in your `APP_SECRET`, admin credentials, and optional AI / Strava keys. `.env.local` is strictly gitignored and will never be committed.
+3. **Decide on Helper Files**:
    - `docker-compose.override.yml`: Useful to commit if you want host code mounts enabled by default on clone.
    - `bin/phpunit.phar`: A 5.6 MB binary test runner. You can either commit it for standalone offline testing or add it to `.gitignore` if you prefer keeping the repo small.
    - `AI_AGENT_GUIDE.md`: Useful documentation for AI agent configurations.
