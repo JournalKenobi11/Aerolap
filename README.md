@@ -17,7 +17,7 @@
 <a href="https://hub.docker.com/r/robiningelbrecht/dreeve"><img src="https://img.shields.io/docker/image-size/robiningelbrecht/dreeve?logo=docker&logoColor=white" alt="Docker Image Size"></a>
 <a href="https://hub.docker.com/r/robiningelbrecht/dreeve"><img src="https://img.shields.io/docker/v/robiningelbrecht/dreeve?sort=semver&logo=docker&logoColor=white" alt="Docker version"></a>
 <a href="https://codecov.io/gh/dreeveapp/dreeve" ><img src="https://codecov.io/gh/dreeveapp/dreeve/branch/master/graph/badge.svg?token=R9hqxRcmi9" alt="codecov.io"/></a>
-<a href="https://discord.gg/p4zpZyCHNc"><img src="https://img.shields.io/badge/Dreeve-%235865F4?logo=discord&logoColor=%23ffffff&label=%20&labelColor=585858" alt="Discord server"></a>  
+<a href="https://discord.gg/p4zpZyCHNc"><img src="https://img.shields.io/badge/Dreeve-%235865F4?logo=discord&logoColor=%23ffffff&label=%20&labelColor=585858" alt="Discord server"></a>
 </p>
 
 ---
@@ -36,7 +36,7 @@
   <a href="https://www.buymeacoffee.com/ingelbrecht" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;" ></a>
 </p>
 
-## 📸 Showcase
+## Showcase
 
 https://github.com/user-attachments/assets/2789c961-f04f-4804-b6eb-88d45e62687c
 
@@ -61,15 +61,15 @@ https://github.com/user-attachments/assets/2789c961-f04f-4804-b6eb-88d45e62687c
 * **User badges** - Shareable badges you can embed on your website, blog, or forum profiles
 * **PWA support** - Use it like a native app on your phone
 
-## 🌳 What's in a name?
+## What's in a name?
 
 **Dreeve** • */driːv/* • *noun*
 
 A `dreeve` is the West-Flemish word (the birthplace of Dreeve's maintainer) for a country road lined with trees on both sides.
 The kind of road every cyclist and runner loves.
 
-## 📖 Documentation
+## Documentation
 
-Start off by showing some ❤️ and give this repo a star. 
+Start off by giving this repo a star.
 When you are done, head over to the [documentation](https://docs.dreeve.app) to get started with the installation and configuration of Dreeve.
 

@@ -1,9 +1,9 @@
 # Runwise: Comprehensive System Design, Architecture Deep Dive & Developer Guide
 
-> **Authoritative System Reference for Developers and AI Agents**  
-> *Monorepo Integration: Dreeve Homelab Server & Runwise Android Companion App*  
-> *Target OS: Android 14 (API 34)*  
-> *Hardware Configuration: Smartwatch (NoiseFit / FIT file sync to Dreeve server) + Smartphone internal sensors (GPS, Accelerometer / Step Detector). **Hardware Invariant: No device possesses a barometric altimeter sensor.***  
+> **Authoritative System Reference for Developers and AI Agents**
+> *Monorepo Integration: Dreeve Homelab Server & Runwise Android Companion App*
+> *Target OS: Android 14 (API 34)*
+> *Hardware Configuration: Smartwatch (NoiseFit / FIT file sync to Dreeve server) + Smartphone internal sensors (GPS, Accelerometer / Step Detector). **Hardware Invariant: No device possesses a barometric altimeter sensor.***
 
 ---
 

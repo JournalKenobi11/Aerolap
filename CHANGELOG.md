@@ -221,7 +221,7 @@ Updated the device automation condition to retain devices that no longer exist
 > [!NOTE]
 > We released a separate __Zepp Connector__ container to automatically sync your Zepp FIT files
 > to Dreeve's watch folder. Read all about it in the docs: https://docs.dreeve.app/integrations/zepp-connector/
-> A big thank you to @fjuliofontes and @effectpears for setting this up 👏
+> A big thank you to @fjuliofontes and @effectpears for setting this up
 
 ## New features
 * Calculate laps during file import
@@ -333,7 +333,7 @@ Updated the device automation condition to retain devices that no longer exist
 > [!NOTE]
 > We released a separate __Hammerhead Wahoo Connector__ container to automatically sync your Hammerhead FIT files
 > to Dreeve's watch folder. Read all about it in the docs: https://docs.dreeve.app/integrations/hammerhead-connector/
-> A big thank you to @goatie999 for setting this up 👏
+> A big thank you to @goatie999 for setting this up
 
 ## New features
 * Added authentication for non-admin pages
@@ -408,7 +408,7 @@ Updated the device automation condition to retain devices that no longer exist
 > [!NOTE]
 > We released a separate __Dreeve Wahoo Connector__ container to automatically sync your Wahoo FIT files
 > to Dreeve's watch folder. Read all about it in the docs: https://docs.dreeve.app/integrations/wahoo-connector/
-> A big thank you to @MattW2 for setting this up 👏
+> A big thank you to @MattW2 for setting this up
 
 ## New features
 * Apply automation rules to past activities
@@ -677,7 +677,7 @@ If you already use Strava, importing your activities from Strava is still fully 
 
 Configuration is now much simpler.
 
-All settings have been moved from YAML configuration files into a built-in admin panel, 
+All settings have been moved from YAML configuration files into a built-in admin panel,
 making Dreeve easier to configure and maintain.
 
 
@@ -781,9 +781,9 @@ For detailed upgrade instructions, see the migration guide: https://docs.dreeve.
 ## New features
 * Allow to configure all maps instead of the heatmap only
 
-> [!WARNING]  
+> [!WARNING]
 > We slightly altered the configuration of the heatmap to take all maps into account.
-> 
+>
 > Configuration before:
 > ```yaml
 >appearance:
@@ -794,7 +794,7 @@ For detailed upgrade instructions, see the migration guide: https://docs.dreeve.
 >    initialCenter: null
 >    initialZoom: null
 > ```
-> 
+>
 > Configuration now:
 > ```yaml
 >appearance:
@@ -847,12 +847,12 @@ These changes are reflected in the documentation: https://docs.dreeve.app/#/conf
 
 # [v4.8.4](https://github.com/dreeveapp/dreeve/releases/tag/v4.8.4) - 2026-05-29
 
-> [!WARNING]  
+> [!WARNING]
 > This release fixes an issue where log files stored under `storage/files/logs` could be accessed through the web server on publicly exposed SfS instances.
 > While the logs did not contain sensitive user data, they were never intended to be publicly accessible. Access to these files is now properly blocked.
 > Security and privacy are taken very seriously, and we apologize for not catching this earlier.
 
-> [!NOTE]  
+> [!NOTE]
 > We revisited the way training load is calculated and discovered that the current implementation was incorrect in certain cases.
 > As a result, users with many heart rate-based activities may notice significant changes in their training load numbers after updating.
 
@@ -879,7 +879,7 @@ These changes are reflected in the documentation: https://docs.dreeve.app/#/conf
 
 **Full Changelog**: https://github.com/dreeveapp/dreeve/compare/v4.8.2...v4.8.3
 
-# [v4.8.2](https://github.com/dreeveapp/dreeve/releases/tag/v4.8.2) - 2026-05-26 
+# [v4.8.2](https://github.com/dreeveapp/dreeve/releases/tag/v4.8.2) - 2026-05-26
 
 ## Improvements
 * A lot of small UX improvements throughout the app
@@ -995,7 +995,7 @@ appearance:
   heatmap:
     # Optional, sets the initial center point of the heatmap as [latitude, longitude].
     # When set together with initialZoom, the map will use this fixed viewport instead of auto-fitting to your most active area.
-    # 🔥 PRO tip: You can easily get the latitude and longitude by navigating to a location in Google Maps. The coordinates are shown in the URL.
+    #  PRO tip: You can easily get the latitude and longitude by navigating to a location in Google Maps. The coordinates are shown in the URL.
     # Leave empty to auto-fit.
     initialCenter: null
     # initialCenter: [51.05, 3.72]
@@ -1078,7 +1078,7 @@ https://docs.dreeve.app/#/configuration/dashboard-widgets?id=traininggoals
 
 ```yaml
 metrics:
-  # An array of activity ids to exclude from peak power outputs. 
+  # An array of activity ids to exclude from peak power outputs.
   # This allows you to blacklist specific activity IDs from the peak power calculation.
   # ["123456789", "987654321"]
   excludeActivitiesFromPeakPowerOutputs: []
@@ -1296,7 +1296,7 @@ gear:
 
 # [v4.6.5](https://github.com/dreeveapp/dreeve/releases/tag/v4.6.5) - 2026-02-21
 
-> [!NOTE]  
+> [!NOTE]
 > This release introduces another data compression, reducing the disk space used by your database.
 > Always create a backup of your database before performing an upgrade.
 
@@ -1318,7 +1318,7 @@ This release fixes a critical issue in the Daemon that was introduced in `v4.6.3
 
 # [v4.6.3](https://github.com/dreeveapp/dreeve/releases/tag/v4.6.3) - 2026-02-15
 
-> [!NOTE]  
+> [!NOTE]
 > This release primarily focuses on data compression, reducing the disk space used by your build directory and database.
 
 ## What's Changed
@@ -1343,7 +1343,7 @@ Another day, another release improving the activity metric charts.
 
 # [v4.6.1](https://github.com/dreeveapp/dreeve/releases/tag/v4.6.1) - 2026-02-10
 
-> [!NOTE]  
+> [!NOTE]
 > This release needs to recalculate the metrics chart on the activity detail pages.
 > Your next import may take a bit longer, but subsequent imports will run at normal speed.
 
@@ -1390,8 +1390,8 @@ We’ve moved the following links into a new dropdown in the top-right corner, a
 
 # [v4.5.0](https://github.com/dreeveapp/dreeve/releases/tag/v4.5.0) - 2026-02-03
 
-> [!WARNING]  
-> Before upgrading to this release, you'll need to upgrade to `v4.4.2` first. 
+> [!WARNING]
+> Before upgrading to this release, you'll need to upgrade to `v4.4.2` first.
 > Skipping this step will result in an error.
 
 ## What's Changed
@@ -1436,7 +1436,7 @@ To properly calculate activity intensities, we introduced a new config option:
 general:
   athlete:
     # The formula used to calculate your resting heart rate. The default is heuristicAgeBased.
-    # Allowed values: a fixed number, heuristicAgeBased or you can set a fixed number for any given date range.  
+    # Allowed values: a fixed number, heuristicAgeBased or you can set a fixed number for any given date range.
     restingHeartRateFormula: 'heuristicAgeBased'
     # restingHeartRateFormula: 50
     # restingHeartRateFormula:
@@ -1524,7 +1524,7 @@ general:
 
 # [v4.3.0](https://github.com/dreeveapp/dreeve/releases/tag/v4.3.0) - 2025-12-22
 
-### 🥳 Strava Webhook support is here!
+### Strava Webhook support is here!
 
 Dreeve now supports Strava webhooks to automatically import and build your data when new activities are uploaded. This eliminates the need to manually run import commands or set up cron jobs.
 
@@ -1602,7 +1602,7 @@ Learn how to enable and configure webhooks in the documentation: https://docs.dr
 
 # [v4.2.0](https://github.com/dreeveapp/dreeve/releases/tag/v4.2.0) - 2025-12-01
 
-> [!WARNING]  
+> [!WARNING]
 > The `weeklyGoals` widget has been removed and replaced by the `trainingGoals` widget.
 > If you currently use `weeklyGoals`, update your configuration accordingly:
 > https://docs.dreeve.app/#/configuration/dashboard-widgets?id=traininggoals
@@ -1616,12 +1616,12 @@ Learn how to enable and configure webhooks in the documentation: https://docs.dr
 
 # [v4.1.0](https://github.com/dreeveapp/dreeve/releases/tag/v4.1.0) - 2025-11-28
 
-🔥 Two new features worth mentioning this release:
+ Two new features worth mentioning this release:
 
 * To keep your configuration clean and maintainable, you can split it across multiple files: https://docs.dreeve.app/#/configuration/main-configuration?id=splitting-your-configuration-into-multiple-files
 * An improved notification system. Under the hood we're using *Shoutrrr*, so any service supported by Shoutrrr, will be supported by SFS (https://shoutrrr.nickfedor.com/dev/services/overview/)
 
-> [!NOTE]  
+> [!NOTE]
 > The old ntfy.sh config will keep working, the feature is backwards compatible.
 > Read the docs how to configure your notifications: https://docs.dreeve.app/#/configuration/main-configuration
 
@@ -1662,7 +1662,7 @@ Learn how to enable and configure webhooks in the documentation: https://docs.dr
 
 # [v4.0.4](https://github.com/dreeveapp/dreeve/releases/tag/v4.0.4) - 2025-11-16
 
-> [!WARNING]  
+> [!WARNING]
 > If you are using the internal cron to manage your app imports and builds,
 > make sure you configured the correct volumes on the Daemon container.
 > The docs were missing a volume and have been updated:
@@ -1716,18 +1716,18 @@ Learn how to enable and configure webhooks in the documentation: https://docs.dr
 
 # [v4.0.0](https://github.com/dreeveapp/dreeve/releases/tag/v4.0.0) - 2025-11-12
 
-> [!WARNING]  
+> [!WARNING]
 > New major release, several breaking changes!
 >
 > 1. The config option `general.ntfyUrl` has been moved to `integrations.notifications.ntfyUrl`
 > 2. The config option `stravaGear` has been moved to `gear.stravaGear`
 > 3. The separate config file `custom-gear.yaml` has been removed.
 >    Its configuration has been merged into the main config file under `gear.customGear`
-> 
+>
 > Simply copy/paste your existing values into their new locations.
 > https://docs.dreeve.app/#/configuration/main-configuration
 
-🔥This new release adds several new features and improvements. 
+This new release adds several new features and improvements.
 The highlight is the addition of an internal scheduler, allowing you to define and run recurring background tasks directly within the app.
 
 If you prefer, you can still use external tools to trigger the import and build scripts.
@@ -1751,7 +1751,7 @@ However, to use the internal scheduler, you’ll need to configure two things:
 
 # [v3.9.0](https://github.com/dreeveapp/dreeve/releases/tag/v3.9.0) - 2025-11-06
 
-🔥 This release includes a complete rewrite of the data import process, making it significantly faster, especially for partial imports.
+ This release includes a complete rewrite of the data import process, making it significantly faster, especially for partial imports.
 
 ## What's Changed
 * ISSUE #1302: Add new version of Zwift map of New York by @robiningelbrecht in https://github.com/dreeveapp/dreeve/pull/1332
@@ -1770,9 +1770,9 @@ However, to use the internal scheduler, you’ll need to configure two things:
 
 # [v3.8.4](https://github.com/dreeveapp/dreeve/releases/tag/v3.8.4) - 2025-11-02
 
-🔥 This release introduces a new dashboard widget __weeklyGoals__.
+ This release introduces a new dashboard widget __weeklyGoals__.
 
-> [!NOTE]  
+> [!NOTE]
 > This widget is disabled in the default dashboard layout. If you want to use this widget you need to configure a custom dashboard layout.
 
 Read more in the documentation: https://docs.dreeve.app/#/configuration/dashboard-widgets?id=weeklygoals
@@ -1785,7 +1785,7 @@ Read more in the documentation: https://docs.dreeve.app/#/configuration/dashboar
 
 # [v3.8.3](https://github.com/dreeveapp/dreeve/releases/tag/v3.8.3) - 2025-10-31
 
-🔥 This release introduces a new config option __metricsDisplayOrder__ for the following widgets:
+ This release introduces a new config option __metricsDisplayOrder__ for the following widgets:
 
 * `weeklyStats`
 * `monthlyStats`
@@ -1810,11 +1810,11 @@ Read more in the documentation: https://docs.dreeve.app/#/configuration/dashboar
 
 # [v3.8.2](https://github.com/dreeveapp/dreeve/releases/tag/v3.8.2) - 2025-10-29
 
-> [!WARNING]  
+> [!WARNING]
 > The config option `metrics.consistencyChallenges` has been moved to the config of the `challengeConsistency` dashboard widget.
 > If you do not have custom challenges configured, you don't have to do anything
 
-🔥 You can now set the purchase price of your (custom) gear to track its relative cost per hour and per activity. Read more in the documentation:
+ You can now set the purchase price of your (custom) gear to track its relative cost per hour and per activity. Read more in the documentation:
 
 * https://docs.dreeve.app/#/configuration/main-configuration
 * https://docs.dreeve.app/#/configuration/custom-gear
@@ -1843,9 +1843,9 @@ Read more in the documentation: https://docs.dreeve.app/#/configuration/dashboar
 
 # [v3.8.0](https://github.com/dreeveapp/dreeve/releases/tag/v3.8.0) - 2025-10-23
 
-🔥 This release introduces a complete overhaul of the “Photos” page.
+ This release introduces a complete overhaul of the “Photos” page.
 
-> [!WARNING]  
+> [!WARNING]
 > The config option `photos.hidePhotosForSportTypes` has been removed. Use the new `defaultEnabledFilters` option instead:
 > ```yaml
 >   photos:
@@ -1867,7 +1867,7 @@ Read more in the documentation: https://docs.dreeve.app/#/configuration/main-con
 
 # [v3.7.4](https://github.com/dreeveapp/dreeve/releases/tag/v3.7.4) - 2025-10-21
 
-> [!WARNING]  
+> [!WARNING]
 > This release includes updates to the existing `monthlyStats` dashboard widget.
 > The `context` configuration option has been removed, as the widget now displays all data at once. You may need to remove duplicate instances of this widget from your dashboard layout configuration.
 >
@@ -1921,7 +1921,7 @@ Read more in the documentation: https://docs.dreeve.app/#/configuration/main-con
 
 # [v3.7.0](https://github.com/dreeveapp/dreeve/releases/tag/v3.7.0) - 2025-10-13
 
-🔥Main new features in this release:
+Main new features in this release:
 
 * More clickable links throughout the app that redirect to a pre-filtered list of activities
 * A new dashboard widget "Zwift Stats"
@@ -1941,7 +1941,7 @@ Read more in the documentation: https://docs.dreeve.app/#/configuration/main-con
 
 # [v3.6.3](https://github.com/dreeveapp/dreeve/releases/tag/v3.6.3) - 2025-10-09
 
-🔥 This release introduces a new feature that lets you click on any day in the dashboard’s activity heatmap to quickly view the activities completed on that date.
+ This release introduces a new feature that lets you click on any day in the dashboard’s activity heatmap to quickly view the activities completed on that date.
 
 ## What's Changed
 * ISSUE #1151: ntfyUrl documenation by @robiningelbrecht in https://github.com/dreeveapp/dreeve/pull/1157
@@ -1971,12 +1971,12 @@ Read more in the documentation: https://docs.dreeve.app/#/configuration/main-con
 
 # [v3.6.0](https://github.com/dreeveapp/dreeve/releases/tag/v3.6.0) - 2025-10-03
 
-> [!WARNING]  
-> This release comes with a new Docker-based architecture.  Before upgrading, review and update the required `.env` values for your setup:  
+> [!WARNING]
+> This release comes with a new Docker-based architecture.  Before upgrading, review and update the required `.env` values for your setup:
 > https://docs.dreeve.app/getting-started/installation/#env
 
 ```.env
-# !! IMPORTANT If you want to serve Dreeve from a custom domain (not localhost), 
+# !! IMPORTANT If you want to serve Dreeve from a custom domain (not localhost),
 # uncomment the following lines and configure them accordingly:
 
 # The domain where Dreeve will be available.
@@ -2254,7 +2254,7 @@ appearance:
 
 # [v3.1.1](https://github.com/dreeveapp/dreeve/releases/tag/v3.1.1) - 2025-07-30
 
-🤖 This release introduces extra configuration options for the AI agent. You can now configure pre-defined chat commands.
+ This release introduces extra configuration options for the AI agent. You can now configure pre-defined chat commands.
 
 Check https://docs.dreeve.app/#/configuration/ai-integration?id=pre-defining-chat-commands for more information.
 
@@ -2282,7 +2282,7 @@ integrations:
 
 # [v3.1.0](https://github.com/dreeveapp/dreeve/releases/tag/v3.1.0) - 2025-07-29
 
-🔥 This release allows you to configure dashboard widgets. You can now choose which widgets you want to see on your dashboard and in which order they are displayed.
+ This release allows you to configure dashboard widgets. You can now choose which widgets you want to see on your dashboard and in which order they are displayed.
 Check https://docs.dreeve.app/#/configuration/main-configuration?id=dashboard-layout for more information.
 
 ## What's Changed
@@ -2330,8 +2330,8 @@ This release introduces configuration options for the heatmap
 
 # [v3.0.0](https://github.com/dreeveapp/dreeve/releases/tag/v3.0.0) - 2025-07-22
 
-* 🚀 Our AI agent "Mark" is now available via the UI as well. You can enable this by setting `enableUI: true` in your config.yaml file
-* ⚠️ Native scheduling has been removed from the SFS image. [Check the docs](https://docs.dreeve.app/#/getting-started/scheduling) for alternatives.
+* Our AI agent "Mark" is now available via the UI as well. You can enable this by setting `enableUI: true` in your config.yaml file
+* Native scheduling has been removed from the SFS image. [Check the docs](https://docs.dreeve.app/#/getting-started/scheduling) for alternatives.
 
 ## What's Changed
 * ISSUE #870: German translations by @robiningelbrecht in https://github.com/dreeveapp/dreeve/pull/871
@@ -2396,7 +2396,7 @@ This release introduces configuration options for the heatmap
 
 # [v2.4.0](https://github.com/dreeveapp/dreeve/releases/tag/v2.4.0) - 2025-07-01
 
-🚀 Dreeve v2.4.0 is here!
+ Dreeve v2.4.0 is here!
 The most noteworthy feature is the virtual workout assistant: https://docs.dreeve.app/#/configuration/ai-integration
 
 ## What's Changed
@@ -2410,14 +2410,14 @@ The most noteworthy feature is the virtual workout assistant: https://docs.dreev
 
 # [v2.3.6](https://github.com/dreeveapp/dreeve/releases/tag/v2.3.6) - 2025-06-30
 
-⚠️We moved the sorting of sportTypes away from the import process by introducing a new setting:
+We moved the sorting of sportTypes away from the import process by introducing a new setting:
 
 ```yaml
 appearance:
   # With this list you can decide the order the sport types will be rendered in. For example in the tabs on the dashboard.
   # You don't have to include all sport types. Sport types not included in this list will be rendered by the app default.
-  # A full list of allowed options is available on https://docs.dreeve.app/#/configuration/main-configuration?id=supported-sport-types 
-  sportTypesSortingOrder: []  
+  # A full list of allowed options is available on https://docs.dreeve.app/#/configuration/main-configuration?id=supported-sport-types
+  sportTypesSortingOrder: []
 ```
 
 ## What's Changed
@@ -2490,8 +2490,8 @@ appearance:
 
 # [v2.3.0](https://github.com/dreeveapp/dreeve/releases/tag/v2.3.0) - 2025-06-16
 
-🚀 New: Fine-tune your heart rate zones with advanced configuration options!
-📖 Learn how to set them up: [Configuration Guide](https://docs.dreeve.app/#/configuration/main-configuration)
+ New: Fine-tune your heart rate zones with advanced configuration options!
+ Learn how to set them up: [Configuration Guide](https://docs.dreeve.app/#/configuration/main-configuration)
 
 ## What's Changed
 * ISSUE #677: Show activity where PB was set by @robiningelbrecht in https://github.com/dreeveapp/dreeve/pull/720
@@ -2511,7 +2511,7 @@ appearance:
 
 # [v2.2.0](https://github.com/dreeveapp/dreeve/releases/tag/v2.2.0) - 2025-06-12
 
-🔥 Be the master of your Eddington. 
+ Be the master of your Eddington.
 Read up on how to configure your Eddington numbers: https://docs.dreeve.app/#/configuration/main-configuration
 
 ## What's Changed
@@ -2565,7 +2565,7 @@ Read up on how to configure your Eddington numbers: https://docs.dreeve.app/#/co
 
 # [v2.1.0](https://github.com/dreeveapp/dreeve/releases/tag/v2.1.0) - 2025-06-03
 
-🔥 Dreeve now allows you to manage custom gear. This is useful for gear that Strava doesn't allow you to track. For example:
+ Dreeve now allows you to manage custom gear. This is useful for gear that Strava doesn't allow you to track. For example:
 
 * Skateboards
 * Peddleboards
@@ -2606,7 +2606,7 @@ Did a big woopsie in `v2.0.1`. This release fixes the booboo
 
 # [v2.0.1](https://github.com/dreeveapp/dreeve/releases/tag/v2.0.1) - 2025-05-27
 
-⚠️ Your next import will probably take a while. We improved the charts on the activity detail pages, but we need to re-calculate a lot of data to do so. Just sit back, wait and relax. We got you
+ Your next import will probably take a while. We improved the charts on the activity detail pages, but we need to re-calculate a lot of data to do so. Just sit back, wait and relax. We got you
 
 ## What's Changed
 * ISSUE [#594](https://github.com/dreeveapp/dreeve/issues/594): Better expressions in DI by [@robiningelbrecht](https://github.com/robiningelbrecht) in [#596](https://github.com/dreeveapp/dreeve/pull/596)
@@ -2621,7 +2621,7 @@ Did a big woopsie in `v2.0.1`. This release fixes the booboo
 
 # [v2.0.0](https://github.com/dreeveapp/dreeve/releases/tag/v2.0.0) - 2025-05-24
 
-🚨 v2.0.0 Migration Notice: Breaking Change
+ v2.0.0 Migration Notice: Breaking Change
 
 Version `v2.0.0` introduces a breaking change: most configuration values have moved from `.env` to a new `config.yaml` file. This requires manual action on your part.
 
@@ -2696,7 +2696,7 @@ https://github.com/dreeveapp/dreeve/wiki/%F0%9F%9A%A8-v2.0.0-Migration-Notice:-B
 
 # [v1.3.1](https://github.com/dreeveapp/dreeve/releases/tag/v1.3.1) - 2025-04-28
 
-Rewind compare 🎉
+Rewind compare
 
 https://github.com/user-attachments/assets/0deedcb0-0571-4b4e-9ad6-952edb8dacfc
 
@@ -2715,7 +2715,7 @@ https://github.com/user-attachments/assets/0deedcb0-0571-4b4e-9ad6-952edb8dacfc
 
 # [v1.3.0](https://github.com/dreeveapp/dreeve/releases/tag/v1.3.0) - 2025-04-25
 
-**Big new feature 🎉!**
+**Big new feature !**
 
 Rewind is here!
 
@@ -2755,7 +2755,7 @@ https://github.com/user-attachments/assets/be4df936-1bfe-4f87-8c59-1f218897cf98
 
 # [v1.2.2](https://github.com/dreeveapp/dreeve/releases/tag/v1.2.2) - 2025-04-15
 
-Last one for today, I promise 👼 
+Last one for today, I promise
 
 ## What's Changed
 * ISSUE-496: gear maintenance fix bug when last tagged activity is most recent one by [@robiningelbrecht](https://github.com/robiningelbrecht) in [#497](https://github.com/dreeveapp/dreeve/pull/497)
@@ -2772,7 +2772,7 @@ Last one for today, I promise 👼
 
 # [v1.2.0](https://github.com/dreeveapp/dreeve/releases/tag/v1.2.0) - 2025-04-15
 
-## Big new feature 🎉!
+## Big new feature !
 
 **New feature: Gear (component) maintenance tracking!**. Learn how it works and how to enable it on https://github.com/dreeveapp/dreeve/wiki/Gear-maintenance
 
@@ -2821,7 +2821,7 @@ Last one for today, I promise 👼
 
 # [v1.1.0](https://github.com/dreeveapp/dreeve/releases/tag/v1.1.0) - 2025-04-01
 
-ℹ️ This release introduces "activity profile charts". The first time after updating, the data import might take some time as it needs to calculate combined activity streams for each of your activities. 
+ This release introduces "activity profile charts". The first time after updating, the data import might take some time as it needs to calculate combined activity streams for each of your activities.
 
 ## What's Changed
 * ISSUE-432: Add elevation profile by [@robiningelbrecht](https://github.com/robiningelbrecht) in [#460](https://github.com/dreeveapp/dreeve/pull/460)
@@ -2839,7 +2839,7 @@ Last one for today, I promise 👼
 
 # [v1.0.0](https://github.com/dreeveapp/dreeve/releases/tag/v1.0.0) - 2025-03-28
 
-Finally, the first stable release 🎉! There will be no breaking changes within the same major versions from now on.
+Finally, the first stable release ! There will be no breaking changes within the same major versions from now on.
 Expect a lot of cool new features coming soon!
 
 ## What's Changed
@@ -2924,7 +2924,7 @@ Expect a lot of cool new features coming soon!
 
 # [v0.4.25](https://github.com/dreeveapp/dreeve/releases/tag/v0.4.25) - 2025-03-10
 
-The app is now available in 🇩🇪 German and 🇵🇹 Portuguese! 
+The app is now available in  German and  Portuguese!
 
 ## What's Changed
 * German translation messages+intl-icu.de_DE.yaml by [@daydreamer77](https://github.com/daydreamer77) in [robiningelbrecht/strava-statistics#368](https://github.com/robiningelbrecht/strava-statistics/pull/368)
@@ -2997,7 +2997,7 @@ The app is now available in 🇩🇪 German and 🇵🇹 Portuguese!
 
 # [v0.4.20](https://github.com/dreeveapp/dreeve/releases/tag/v0.4.20) - 2025-02-28
 
-⚠️ This release will import a lot of new data. Depending on the amount of activities you have, this might take a few days.
+ This release will import a lot of new data. Depending on the amount of activities you have, this might take a few days.
 
 ## What's Changed
 * ISSUE-290: Generate GPX files in preparation of Dawarich integration by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#304](https://github.com/robiningelbrecht/strava-statistics/pull/304)
@@ -3059,7 +3059,7 @@ The app is now available in 🇩🇪 German and 🇵🇹 Portuguese!
 
 # [v0.4.13](https://github.com/dreeveapp/dreeve/releases/tag/v0.4.13) - 2025-02-12
 
-🎉 Special thanks to [@FoxxMD](https://github.com/FoxxMD) for helping out and configuring the docker image
+ Special thanks to [@FoxxMD](https://github.com/FoxxMD) for helping out and configuring the docker image
 
 ## What's Changed
 * ISSUE-232: Improve test coverage by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#261](https://github.com/robiningelbrecht/strava-statistics/pull/261)
@@ -3089,7 +3089,7 @@ The app is now available in 🇩🇪 German and 🇵🇹 Portuguese!
 
 # [v0.4.11](https://github.com/dreeveapp/dreeve/releases/tag/v0.4.11) - 2025-02-06
 
-Sorry for all the releases 🦧
+Sorry for all the releases
 
 ## What's Changed
 * ISSUE-243: Fix PWA and gear names by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#244](https://github.com/robiningelbrecht/strava-statistics/pull/244)
@@ -3130,7 +3130,7 @@ Sorry for all the releases 🦧
 * ISSUE-214: Fix gear names by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#215](https://github.com/robiningelbrecht/strava-statistics/pull/215)
 * ISSUE-218: Avg pace for running activity by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#220](https://github.com/robiningelbrecht/strava-statistics/pull/220)
 * ISSUE-217: Added environment debug console command by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#221](https://github.com/robiningelbrecht/strava-statistics/pull/221)
-* V0.4.7 by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#222](https://github.com/robiningelbrecht/strava-statistics/pull/222) by [@FoxxMD](https://github.com/FoxxMD) 
+* V0.4.7 by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#222](https://github.com/robiningelbrecht/strava-statistics/pull/222) by [@FoxxMD](https://github.com/FoxxMD)
 
 **Full Changelog**: https://github.com/robiningelbrecht/strava-statistics/compare/v0.4.6...v0.4.7
 
@@ -3191,7 +3191,7 @@ Sorry for all the releases 🦧
 # [v0.4.0](https://github.com/dreeveapp/dreeve/releases/tag/v0.4.0) - 2025-01-23
 
 > [!WARNING]
-Make sure to backup your database before upgrading. This release has a working migrate path from `v0.3.x` to `v0.4.0`, but since there was a huge backend overhaul, it's better to be safe than sorry right? 😎
+Make sure to backup your database before upgrading. This release has a working migrate path from `v0.3.x` to `v0.4.0`, but since there was a huge backend overhaul, it's better to be safe than sorry right?
 
 This release adds support for localisations and translations. Expect more new cool features soon.
 
@@ -3287,7 +3287,7 @@ This release adds support for localisations and translations. Expect more new co
 
 # Breaking change!
 
-⚠️ This release introduces a breaking change, please read https://github.com/robiningelbrecht/strava-statistics/wiki/Migrate-from-v0.2.x-to-v0.3.x before upgrading
+ This release introduces a breaking change, please read https://github.com/robiningelbrecht/strava-statistics/wiki/Migrate-from-v0.2.x-to-v0.3.x before upgrading
 
 ## What's Changed
 * Re-configure Tailwind by [@robiningelbrecht](https://github.com/robiningelbrecht) in [robiningelbrecht/strava-statistics#102](https://github.com/robiningelbrecht/strava-statistics/pull/102)
