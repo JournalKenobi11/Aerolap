@@ -33,21 +33,22 @@ final readonly class TrainingStressChartBuilder
             'grid' => [
                 'left' => '50px',
                 'right' => '50px',
-                'top' => '35px',
-                'bottom' => '25px',
+                'top' => '45px',
+                'bottom' => '30px',
+                'containLabel' => true,
             ],
             'xAxis' => [
                 'type' => 'category',
                 'data' => $dates,
                 'axisLine' => ['lineStyle' => ['color' => '#cbd5e1']],
-                'axisLabel' => ['color' => '#64748b', 'fontSize' => 10],
+                'axisLabel' => ['fontSize' => 10],
             ],
             'yAxis' => [
                 [
                     'type' => 'value',
                     'name' => 'Cardio (ICS)',
                     'nameTextStyle' => ['color' => '#0284c7', 'fontSize' => 10],
-                    'splitLine' => ['lineStyle' => ['color' => '#f1f5f9']],
+                    'splitLine' => ['show' => true],
                     'axisLabel' => ['color' => '#0284c7', 'fontSize' => 10],
                 ],
                 [
@@ -132,19 +133,20 @@ final readonly class TrainingStressChartBuilder
             'grid' => [
                 'left' => '45px',
                 'right' => '20px',
-                'top' => '35px',
-                'bottom' => '25px',
+                'top' => '45px',
+                'bottom' => '30px',
+                'containLabel' => true,
             ],
             'xAxis' => [
                 'type' => 'category',
                 'data' => $chartData['weeklyCategories'] ?? [],
                 'axisLine' => ['lineStyle' => ['color' => '#cbd5e1']],
-                'axisLabel' => ['color' => '#64748b', 'fontSize' => 10],
+                'axisLabel' => ['fontSize' => 10],
             ],
             'yAxis' => [
                 'type' => 'value',
-                'splitLine' => ['lineStyle' => ['color' => '#f1f5f9']],
-                'axisLabel' => ['color' => '#64748b', 'fontSize' => 10],
+                'splitLine' => ['show' => true],
+                'axisLabel' => ['fontSize' => 10],
             ],
             'series' => [
                 [
