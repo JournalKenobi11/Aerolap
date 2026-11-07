@@ -138,94 +138,105 @@ final readonly class MobileSyncRequestHandler
         $maxHeartRate = isset($payload['maxHeartRate']) ? (int) $payload['maxHeartRate'] : null;
         $polyline = isset($payload['polyline']) ? (string) $payload['polyline'] : null;
 
-        $this->connection->insert('Activity', [
-            'activityId' => $activityId,
-            'name' => $name,
-            'sportType' => $sportType,
-            'activityType' => $activityType,
-            'workoutType' => $workoutType,
-            'worldType' => 'realWorld',
-            'importSource' => 'manual',
-            'startDateTime' => $startDateTime,
-            'distance' => $distance,
-            'elevation' => $elevation,
-            'calories' => $calories,
-            'averageSpeed' => $avgSpeed,
-            'maxSpeed' => $maxSpeed,
-            'averageHeartRate' => $avgHeartRate,
-            'maxHeartRate' => $maxHeartRate,
-            'averageCadence' => $avgCadence,
-            'movingTimeInSeconds' => $movingTimeInSeconds,
-            'elapsedTimeInSeconds' => $elapsedTimeInSeconds,
-            'deviceName' => $deviceName,
-            'polyline' => $polyline,
-            'description' => $description,
-            'totalImageCount' => 0,
-            'markedForDeletion' => 0,
-        ]);
+        $this->connection->beginTransaction();
+        try {
+            $this->connection->insert('Activity', [
+                'activityId' => $activityId,
+                'name' => $name,
+                'sportType' => $sportType,
+                'activityType' => $activityType,
+                'workoutType' => $workoutType,
+                'worldType' => 'realWorld',
+                'importSource' => 'manual',
+                'startDateTime' => $startDateTime,
+                'distance' => $distance,
+                'elevation' => $elevation,
+                'calories' => $calories,
+                'averageSpeed' => $avgSpeed,
+                'maxSpeed' => $maxSpeed,
+                'averageHeartRate' => $avgHeartRate,
+                'maxHeartRate' => $maxHeartRate,
+                'averageCadence' => $avgCadence,
+                'movingTimeInSeconds' => $movingTimeInSeconds,
+                'elapsedTimeInSeconds' => $elapsedTimeInSeconds,
+                'deviceName' => $deviceName,
+                'polyline' => $polyline,
+                'description' => $description,
+                'totalImageCount' => 0,
+                'markedForDeletion' => 0,
+            ]);
 
-        // Save laps if present
-        if (!empty($payload['laps']) && is_array($payload['laps'])) {
-            foreach ($payload['laps'] as $idx => $lap) {
-                $lapId = 'activityLap-' . (string) ActivityId::random();
-                $lDist = (int) ($lap['distanceMeters'] ?? 0);
-                $lTime = (int) ($lap['movingTimeSeconds'] ?? 0);
-                $lSpeed = $lTime > 0 ? ($lDist / $lTime) : 0.0;
-                $this->connection->insert('ActivityLap', [
-                    'lapId' => $lapId,
-                    'activityId' => $activityId,
-                    'lapNumber' => (int) ($lap['lapNumber'] ?? ($idx + 1)),
-                    'name' => (string) ($lap['name'] ?? ('Lap ' . ($idx + 1))),
-                    'elapsedTimeInSeconds' => $lTime,
-                    'movingTimeInSeconds' => $lTime,
-                    'distance' => $lDist,
-                    'averageSpeed' => $lSpeed,
-                    'minAverageSpeed' => $lSpeed,
-                    'maxAverageSpeed' => $lSpeed,
-                    'maxSpeed' => $lSpeed,
-                    'elevationDifference' => (int) ($lap['elevationDifference'] ?? 0),
-                    'averageHeartRate' => isset($lap['averageHeartRate']) ? (int) $lap['averageHeartRate'] : null,
-                ]);
-            }
-        }
-
-        // Save splits if present
-        if (!empty($payload['splits']) && is_array($payload['splits'])) {
-            foreach ($payload['splits'] as $idx => $split) {
-                $sDist = (int) ($split['distanceMeters'] ?? 1000);
-                $sTime = (int) ($split['movingTimeSeconds'] ?? 0);
-                $sSpeed = $sTime > 0 ? ($sDist / $sTime) : 0.0;
-                $this->connection->insert('ActivitySplit', [
-                    'activityId' => $activityId,
-                    'unitSystem' => 'metric',
-                    'splitNumber' => (int) ($split['splitNumber'] ?? ($idx + 1)),
-                    'distance' => $sDist,
-                    'elapsedTimeInSeconds' => $sTime,
-                    'movingTimeInSeconds' => $sTime,
-                    'elevationDifference' => (int) ($split['elevationDifference'] ?? 0),
-                    'averageSpeed' => $sSpeed,
-                    'minAverageSpeed' => $sSpeed,
-                    'maxAverageSpeed' => $sSpeed,
-                    'paceZone' => (int) ($split['paceZone'] ?? 0),
-                    'gapPaceInSecondsPerKm' => null,
-                ]);
-            }
-        }
-
-        // Save streams if present
-        if (!empty($payload['streams']) && is_array($payload['streams'])) {
-            $createdOn = $this->clock->getCurrentDateTimeImmutable()->format('Y-m-d H:i:s');
-            foreach ($payload['streams'] as $sType => $sData) {
-                if (is_array($sData) && !empty($sData)) {
-                    $this->connection->insert('ActivityStream', [
+            // Save laps if present
+            if (!empty($payload['laps']) && is_array($payload['laps'])) {
+                foreach ($payload['laps'] as $idx => $lap) {
+                    $lapId = 'activityLap-' . (string) ActivityId::random();
+                    $lDist = (int) ($lap['distanceMeters'] ?? 0);
+                    $lTime = (int) ($lap['movingTimeSeconds'] ?? 0);
+                    $lSpeed = $lTime > 0 ? ($lDist / $lTime) : 0.0;
+                    $this->connection->insert('ActivityLap', [
+                        'lapId' => $lapId,
                         'activityId' => $activityId,
-                        'streamType' => (string) $sType,
-                        'data' => Json::encodeAndCompress($sData),
-                        'dataSize' => count($sData),
-                        'createdOn' => $createdOn,
+                        'lapNumber' => (int) ($lap['lapNumber'] ?? ($idx + 1)),
+                        'name' => (string) ($lap['name'] ?? ('Lap ' . ($idx + 1))),
+                        'elapsedTimeInSeconds' => $lTime,
+                        'movingTimeInSeconds' => $lTime,
+                        'distance' => $lDist,
+                        'averageSpeed' => $lSpeed,
+                        'minAverageSpeed' => $lSpeed,
+                        'maxAverageSpeed' => $lSpeed,
+                        'maxSpeed' => $lSpeed,
+                        'elevationDifference' => (int) ($lap['elevationDifference'] ?? 0),
+                        'averageHeartRate' => isset($lap['averageHeartRate']) ? (int) $lap['averageHeartRate'] : null,
                     ]);
                 }
             }
+
+            // Save splits if present
+            if (!empty($payload['splits']) && is_array($payload['splits'])) {
+                foreach ($payload['splits'] as $idx => $split) {
+                    $sDist = (int) ($split['distanceMeters'] ?? 1000);
+                    $sTime = (int) ($split['movingTimeSeconds'] ?? 0);
+                    $sSpeed = $sTime > 0 ? ($sDist / $sTime) : 0.0;
+                    $this->connection->insert('ActivitySplit', [
+                        'activityId' => $activityId,
+                        'unitSystem' => 'metric',
+                        'splitNumber' => (int) ($split['splitNumber'] ?? ($idx + 1)),
+                        'distance' => $sDist,
+                        'elapsedTimeInSeconds' => $sTime,
+                        'movingTimeInSeconds' => $sTime,
+                        'elevationDifference' => (int) ($split['elevationDifference'] ?? 0),
+                        'averageSpeed' => $sSpeed,
+                        'minAverageSpeed' => $sSpeed,
+                        'maxAverageSpeed' => $sSpeed,
+                        'paceZone' => (int) ($split['paceZone'] ?? 0),
+                        'gapPaceInSecondsPerKm' => null,
+                    ]);
+                }
+            }
+
+            // Save streams if present
+            if (!empty($payload['streams']) && is_array($payload['streams'])) {
+                $createdOn = $this->clock->getCurrentDateTimeImmutable()->format('Y-m-d H:i:s');
+                foreach ($payload['streams'] as $sType => $sData) {
+                    if (is_array($sData) && !empty($sData)) {
+                        $this->connection->insert('ActivityStream', [
+                            'activityId' => $activityId,
+                            'streamType' => (string) $sType,
+                            'data' => Json::encodeAndCompress($sData),
+                            'dataSize' => count($sData),
+                            'createdOn' => $createdOn,
+                        ]);
+                    }
+                }
+            }
+
+            $this->connection->commit();
+        } catch (\Throwable $e) {
+            $this->connection->rollBack();
+            return new JsonResponse([
+                'status' => 'error',
+                'message' => 'Failed to persist activity: ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         $this->renderCache->invalidateTags(RootCacheTag::ACTIVITIES);

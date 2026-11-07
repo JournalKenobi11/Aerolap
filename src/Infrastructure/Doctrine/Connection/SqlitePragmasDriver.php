@@ -38,6 +38,13 @@ final class SqlitePragmasDriver extends AbstractDriverMiddleware
         // Note that SQLite ignores this when a transaction upgrades from a read to a write lock.
         $connection->exec('PRAGMA busy_timeout=30000');
         $connection->exec('PRAGMA synchronous=NORMAL');
+        // Aerolap High-Performance Optimizations:
+        // Cache up to 64MB in RAM (pins 100% of dreeve.db in memory)
+        $connection->exec('PRAGMA cache_size=-64000');
+        // Enable memory-mapped I/O up to 256MB to avoid read syscall overhead
+        $connection->exec('PRAGMA mmap_size=268435456');
+        // Keep temporary tables, indices, and sorting scratchpads in RAM
+        $connection->exec('PRAGMA temp_store=MEMORY');
 
         return $connection;
     }

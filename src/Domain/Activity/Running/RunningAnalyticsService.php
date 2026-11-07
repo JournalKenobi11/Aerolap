@@ -65,14 +65,15 @@ final readonly class RunningAnalyticsService
             ];
         }
 
-        // 1. Fetch streams
-        $timeStream = $this->getStreamData($activityId, StreamType::TIME);
-        $velocityStream = $this->getStreamData($activityId, StreamType::VELOCITY);
-        $heartRateStream = $this->getStreamData($activityId, StreamType::HEART_RATE);
-        $distanceStream = $this->getStreamData($activityId, StreamType::DISTANCE);
-        $altitudeStream = $this->getStreamData($activityId, StreamType::ALTITUDE);
-        $movingStream = $this->getStreamData($activityId, StreamType::MOVING);
-        $cadenceStream = $this->getStreamData($activityId, StreamType::CADENCE);
+        // 1. Fetch streams (single indexed batch query via repository)
+        $activityStreams = $this->activityStreamRepository->findByActivityId($activityId);
+        $timeStream = $activityStreams->filterOnType(StreamType::TIME)?->getData() ?? [];
+        $velocityStream = $activityStreams->filterOnType(StreamType::VELOCITY)?->getData() ?? [];
+        $heartRateStream = $activityStreams->filterOnType(StreamType::HEART_RATE)?->getData() ?? [];
+        $distanceStream = $activityStreams->filterOnType(StreamType::DISTANCE)?->getData() ?? [];
+        $altitudeStream = $activityStreams->filterOnType(StreamType::ALTITUDE)?->getData() ?? [];
+        $movingStream = $activityStreams->filterOnType(StreamType::MOVING)?->getData() ?? [];
+        $cadenceStream = $activityStreams->filterOnType(StreamType::CADENCE)?->getData() ?? [];
 
         // 2. Pace Zones (derived from athlete's actual threshold pace)
         $paceZones = $this->resolvePaceZones();
@@ -425,17 +426,4 @@ final readonly class RunningAnalyticsService
         return 0;
     }
 
-    /**
-     * @return list<mixed>
-     */
-    private function getStreamData(ActivityId $activityId, StreamType $streamType): array
-    {
-        try {
-            $stream = $this->activityStreamRepository->findOneByActivityAndStreamType($activityId, $streamType);
-
-            return $stream->getData();
-        } catch (EntityNotFound) {
-            return [];
-        }
-    }
 }

@@ -9,6 +9,8 @@ services:
       - ./templates:/var/www/templates:ro
       - ./tests:/var/www/tests:ro
       - ./bin:/var/www/bin:ro
+      - ./public:/var/www/public:ro
+      - ./docker/app/conf.d/99-aerolap-perf.ini:/usr/local/etc/php/conf.d/99-aerolap-perf.ini:ro
     networks:
       - statistics-for-strava-network
       - homelab
@@ -19,6 +21,7 @@ services:
     volumes:
       - ./src:/var/www/src:ro
       - ./templates:/var/www/templates:ro
+      - ./docker/app/conf.d/99-aerolap-perf.ini:/usr/local/etc/php/conf.d/99-aerolap-perf.ini:ro
     networks:
       - statistics-for-strava-network
 
