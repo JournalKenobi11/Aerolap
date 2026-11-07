@@ -30,6 +30,10 @@ final readonly class WidgetName implements \Stringable
         if ('mostRecentActivitiesWithMap' === $name) {
             $name = 'mostRecentActivityCards';
         }
+        // Alias Eddington to TrainingStress
+        if ('eddington' === $name) {
+            $name = 'trainingStress';
+        }
 
         return new self($name);
     }

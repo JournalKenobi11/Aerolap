@@ -18,6 +18,8 @@ use App\Infrastructure\Cache\Tag\RootCacheTag;
 use App\Infrastructure\Http\HtmlResponse;
 use App\Infrastructure\Measurement\UnitSystem;
 use App\Infrastructure\Serialization\Json;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -36,17 +38,9 @@ final readonly class EddingtonRequestHandler
     }
 
     #[Route(path: '/eddington', name: 'eddington', methods: ['GET'])]
-    public function handle(): HtmlResponse
+    public function handle(): RedirectResponse
     {
-        return $this->pageRenderer->render(
-            cacheability: Cacheability::for(
-                cacheKey: 'eddington',
-                cacheTags: CacheTags::of(RootCacheTag::ACTIVITIES, RootCacheTag::SETTINGS_METRICS),
-                cacheContexts: CacheContexts::of(AuthenticatedCacheContext::class),
-            ),
-            render: fn (): string => $this->renderFor(),
-            navigationSection: NavigationSection::EDDINGTON,
-        );
+        return new RedirectResponse('/training-stress', Response::HTTP_MOVED_PERMANENTLY);
     }
 
     private function renderFor(): string

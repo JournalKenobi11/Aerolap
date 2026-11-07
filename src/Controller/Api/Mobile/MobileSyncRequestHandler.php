@@ -8,6 +8,7 @@ use App\Domain\Activity\ActivityId;
 use App\Domain\Activity\DailyTrainingLoad;
 use App\Domain\Activity\Running\RunningTrainingStatusAdvisor;
 use App\Domain\Activity\Running\RunPlanService;
+use App\Domain\Activity\Running\TrainingStress\TrainingStressService;
 use App\Domain\Activity\SportType\SportType;
 use App\Domain\Dashboard\Widget\TrainingLoad\TrainingMetrics;
 use App\Domain\Settings\SettingsRepository;
@@ -35,6 +36,7 @@ final readonly class MobileSyncRequestHandler
         private RunPlanService $runPlanService,
         private Clock $clock,
         private RenderCache $renderCache,
+        private TrainingStressService $trainingStressService,
     ) {
     }
 
@@ -76,6 +78,9 @@ final readonly class MobileSyncRequestHandler
         // 5. Activities list (with delta sync support)
         $activities = $this->getActivities($since);
 
+        // 6. Workload & Stress (Dual-Lens Analysis)
+        $trainingStress = $this->trainingStressService->analyze();
+
         return new JsonResponse([
             'status' => 'success',
             'syncedAt' => $this->clock->getCurrentDateTimeImmutable()->format(\DateTimeInterface::ATOM),
@@ -89,6 +94,7 @@ final readonly class MobileSyncRequestHandler
             ],
             'plan' => $plan,
             'activities' => $activities,
+            'trainingStress' => $trainingStress->toArray(),
         ]);
     }
 

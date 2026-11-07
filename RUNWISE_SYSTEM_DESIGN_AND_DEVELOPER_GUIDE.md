@@ -358,3 +358,40 @@ The Runwise codebase is organized as follows:
 - **Documentation**:
   - `RUNWISE_ANDROID_COMPLETE_FUNCTIONAL_SPECIFICATION.md`
   - `RUNWISE_SYSTEM_DESIGN_AND_DEVELOPER_GUIDE.md`
+
+---
+
+## 7. Future Activities & Post-Race Roadmap
+
+### Feature Activity 1: Jack Daniels VDOT & Dynamic Training Pace Radar
+> **Status:** Queued for Post-Target Race Phase (Active plan locked for Nov 22, 2026 10K Race).
+
+- **Objective:** Dynamically calculate the runner's physiological **VDOT score** (Jack Daniels Running Formula) from competitive best efforts across 3K, 5K, and 10K in the database, without forcing the athlete into rigid laboratory testing.
+- **Components to Implement:**
+  1. **VDOT Calculator Engine (`src/Domain/Activity/Running/VdotCalculator.php`):**
+     $$\text{VO}_2 = \frac{-4.60 + 0.182258 \cdot v + 0.000104 \cdot v^2}{0.8 + 0.1894393 \cdot e^{-0.012778 \cdot t} + 0.2989558 \cdot e^{-0.1932605 \cdot t}}$$
+     Where $v$ is velocity (m/min) and $t$ is time (minutes).
+  2. **Dynamic 5-Pace Prescription Matrix:**
+     - **E-Pace (Easy Aerobic):** 59–74% VO2max (rebuilding base & tendon remodeling).
+     - **M-Pace (Marathon Tempo):** 75–84% VO2max (aerobic capacity under moderate glycogen burn).
+     - **T-Pace (Lactate Threshold):** 83–88% VO2max (exact 60-minute maximum sustainable pace).
+     - **I-Pace (VO2max Intervals):** 95–100% VO2max (cardiac output and stroke volume development).
+     - **R-Pace (Repetition Speed):** Neuromuscular turnover and running economy.
+  3. **UI Integration:**
+     - Dedicated page `/vdot` with interactive pace sliders and race equivalence radar chart.
+     - Mobile sync export in `athlete.vdot` and `athlete.trainingPaces`.
+
+---
+
+## 8. Eddington Replacement: Longitudinal Aerobic Efficiency (EF & Cardiac Drift Tracker)
+
+> **Context:** Cycling-derived Eddington numbers ($E$ days of $\ge E$ km) are counterproductive for running due to biomechanical impact thresholds. Replaced with longitudinal aerobic cardiovascular fitness tracking.
+
+- **Core Metric 1: Efficiency Factor (EF):**
+  $$\text{EF} = \frac{\text{Average Speed (meters / minute)}}{\text{Average Heart Rate (bpm)}}$$
+  Calculated across steady-state runs. An upward trend over trailing 30, 60, and 90 days indicates greater aerobic power at identical or lower cardiovascular stress.
+- **Core Metric 2: Decoupling ($Pw:Hr$ / Cardiac Drift) Longitudinal History:**
+  Tracks heart rate drift between the 1st half and 2nd half of long runs. Sustained decoupling under 5% confirms deep aerobic endurance base.
+- **Core Metric 3: Heart Rate Cost per Kilometer:**
+  $$\text{Cardiac Cost} = \text{Average HR} \times \text{Pace (minutes / km)}$$
+  Normalizes beats required per kilometer traveled regardless of temperature or minor terrain changes.

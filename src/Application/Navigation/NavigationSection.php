@@ -12,6 +12,7 @@ enum NavigationSection: string
     case GEAR = 'gear';
     case SEGMENTS = 'segments';
     case MONTHLY_STATS = 'monthly-stats';
+    case TRAINING_STRESS = 'training-stress';
     case EDDINGTON = 'eddington';
     case HEATMAP = 'heatmap';
     case BEST_EFFORTS = 'best-efforts';

@@ -1,0 +1,424 @@
+{% include 'html/navigation/breadcrumbs.html.twig' with {'breadcrumbs': [{
+    'url': path('training_stress'),
+    'label': 'Workload & Stress'|trans
+}]} %}
+
+{% autoescape false %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-gray-200">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <span class="text-amber-500">⚡</span> {{ "Training Workload & Stress"|trans }}
+                </h1>
+                <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                    Config v{{ stress.configVersion }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mt-1">
+                {{ "Dual-lens analysis combining mechanical volume step progression with cardiovascular internal strain."|trans }}
+            </p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            {% if stress.targetRaceDate is not null %}
+                <div class="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs font-medium flex items-center gap-1.5">
+                    <svg class="size-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span><strong>10K Race:</strong> {{ stress.targetRaceDate }} ({{ stress.daysToRace }} days away)</span>
+                </div>
+            {% endif %}
+            <div class="px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-gray-600 text-xs">
+                <span>HR: <strong>{{ stress.athleteRestingHr }}–{{ stress.athleteMaxHr }} bpm</strong> ({{ stress.hrCalcMethod }})</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Subjective Check-in (10-Second Niggle & Soreness Guard) -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden">
+        <div class="bg-slate-50 px-5 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="text-base">🩺</span>
+                <h2 class="text-sm font-bold text-gray-900 uppercase tracking-wider">{{ "Daily Subjective Check-in (10-Second Guard)"|trans }}</h2>
+            </div>
+            <div class="text-xs text-gray-500">
+                {% if stress.subjectiveLog is not null %}
+                    {{ "Latest Entry:"|trans }} <strong class="{{ stress.subjectiveLog.sorenessScore >= 5 ? 'text-rose-600' : (stress.subjectiveLog.sorenessScore >= 3 ? 'text-amber-600' : 'text-emerald-600') }}">{{ stress.subjectiveLog.date }} — Score {{ stress.subjectiveLog.sorenessScore }}/10 ({{ stress.subjectiveLog.location }})</strong>
+                {% else %}
+                    <span class="text-gray-400">{{ "No check-in recorded yet for today"|trans }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="p-5">
+            {% if stress.hasConsecutiveSorenessAlert %}
+                <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-start gap-2">
+                    <span class="text-amber-600 text-sm font-bold">⚠️</span>
+                    <div>
+                        <strong>{{ "Persistent Soreness Detected:"|trans }}</strong>
+                        {{ "You have logged pain/soreness of 3 or higher for 3+ consecutive days. Give soft tissues recovery time and avoid hard sessions."|trans }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{{ path('training_stress_log_soreness') }}" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    <!-- Soreness Score Slider/Radio -->
+                    <div class="md:col-span-5 space-y-1.5">
+                        <label class="block text-xs font-semibold text-gray-700">
+                            {{ "Soreness / Pain Level (0 = None, 5+ = Override / Cut Back):"|trans }}
+                        </label>
+                        <div class="flex items-center gap-2">
+                            <input type="range" name="sorenessScore" id="sorenessScoreInput" min="0" max="10" value="{{ stress.subjectiveLog ? stress.subjectiveLog.sorenessScore : 0 }}"
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                   oninput="document.getElementById('sorenessScoreVal').innerText = this.value; updateScoreColor(this.value);" />
+                            <span id="sorenessScoreVal" class="text-lg font-extrabold w-8 text-center text-slate-800">
+                                {{ stress.subjectiveLog ? stress.subjectiveLog.sorenessScore : 0 }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-xxs text-gray-400 px-0.5">
+                            <span>0 (Fresh)</span>
+                            <span>3 (Mild)</span>
+                            <span>5 (Cut Back)</span>
+                            <span>10 (Severe)</span>
+                        </div>
+                    </div>
+
+                    <!-- Location Selector -->
+                    <div class="md:col-span-3 space-y-1.5">
+                        <label for="location" class="block text-xs font-semibold text-gray-700">{{ "Location:"|trans }}</label>
+                        <select id="location" name="location" class="w-full text-xs rounded-lg border-gray-300 py-2 px-2.5 bg-white border focus:ring-blue-500 focus:border-blue-500">
+                            {% set curLoc = stress.subjectiveLog ? stress.subjectiveLog.location : 'None' %}
+                            <option value="None" {{ curLoc == 'None' ? 'selected' : '' }}>None (Full Body Fresh)</option>
+                            <option value="Right Calf" {{ curLoc == 'Right Calf' ? 'selected' : '' }}>Right Calf</option>
+                            <option value="Left Calf" {{ curLoc == 'Left Calf' ? 'selected' : '' }}>Left Calf</option>
+                            <option value="Achilles" {{ curLoc == 'Achilles' ? 'selected' : '' }}>Achilles Tendon</option>
+                            <option value="Shin" {{ curLoc == 'Shin' ? 'selected' : '' }}>Shin / Lower Leg</option>
+                            <option value="Knee" {{ curLoc == 'Knee' ? 'selected' : '' }}>Knee / Patella</option>
+                            <option value="Foot / Forefoot" {{ curLoc == 'Foot / Forefoot' ? 'selected' : '' }}>Foot / Forefoot / Plantar</option>
+                            <option value="Hip" {{ curLoc == 'Hip' ? 'selected' : '' }}>Hip / Glute / Groin</option>
+                            <option value="Hamstring" {{ curLoc == 'Hamstring' ? 'selected' : '' }}>Hamstring / Quad</option>
+                            <option value="Other" {{ curLoc == 'Other' ? 'selected' : '' }}>Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Notes & Submit -->
+                    <div class="md:col-span-4 space-y-1.5">
+                        <label for="notes" class="block text-xs font-semibold text-gray-700">{{ "Short Note (Optional):"|trans }}</label>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="notes" name="notes" placeholder="e.g. Mild tightness after long run"
+                                   value="{{ stress.subjectiveLog ? stress.subjectiveLog.notes : '' }}"
+                                   class="grow text-xs rounded-lg border-gray-300 py-1.5 px-2.5 bg-white border focus:ring-blue-500 focus:border-blue-500" />
+                            <button type="submit" class="shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg shadow-xs transition">
+                                {{ "Save"|trans }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Master Status & Clinical Guidance Card -->
+    {% set badgeBg = stress.statusBadge.color == 'green' ? 'bg-emerald-50 border-emerald-300' : (stress.statusBadge.color == 'blue' ? 'bg-blue-50 border-blue-300' : (stress.statusBadge.color == 'red' ? 'bg-rose-50 border-rose-300' : (stress.statusBadge.color == 'yellow' ? 'bg-amber-50 border-amber-300' : 'bg-slate-50 border-slate-300'))) %}
+    {% set pillBg = stress.statusBadge.color == 'green' ? 'bg-emerald-600 text-white' : (stress.statusBadge.color == 'blue' ? 'bg-blue-600 text-white' : (stress.statusBadge.color == 'red' ? 'bg-rose-600 text-white' : (stress.statusBadge.color == 'yellow' ? 'bg-amber-600 text-white' : 'bg-slate-600 text-white'))) %}
+
+    <div class="rounded-xl border {{ badgeBg }} p-5 shadow-xs">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider {{ pillBg }}">
+                        {{ stress.statusBadge.label }}
+                    </span>
+                    <h2 class="text-lg font-bold text-gray-900">{{ stress.guidanceHeadline }}</h2>
+                </div>
+                <p class="text-sm text-gray-700 max-w-4xl leading-relaxed mt-2">
+                    {{ stress.guidanceText }}
+                </p>
+            </div>
+            {% if stress.isTapering %}
+                <div class="shrink-0 px-3 py-2 bg-blue-100 border border-blue-200 rounded-lg text-blue-900 text-xs font-semibold text-center">
+                    🏁 Race Taper Guard Active<br/>
+                    <span class="font-normal text-blue-700">Volume reduction intentional</span>
+                </div>
+            {% elseif stress.isPostRace %}
+                <div class="shrink-0 px-3 py-2 bg-indigo-100 border border-indigo-200 rounded-lg text-indigo-900 text-xs font-semibold text-center">
+                    🌿 Post-Race Recovery Mode<br/>
+                    <span class="font-normal text-indigo-700">Allowing baseline consolidation</span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Dual-Lens Uncoupled Panels -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Lens 1: Mechanical Volume & Musculoskeletal Step Progression -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden flex flex-col justify-between">
+            <div>
+                <div class="px-5 py-3.5 bg-slate-50 border-b border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">🏃</span>
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">{{ "External Mechanical Volume Progression"|trans }}</h3>
+                    </div>
+                    <span class="text-xxs px-2 py-0.5 rounded font-bold uppercase tracking-wider {{ stress.volumeStepStatus == 'Safe' ? 'bg-emerald-100 text-emerald-800' : (stress.volumeStepStatus == 'Watch' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">
+                        {{ stress.volumeStepStatus }}
+                    </span>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <!-- Metric Cards -->
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div class="text-xxs uppercase tracking-wider text-gray-500 font-semibold">{{ "Rolling 7d Run Volume"|trans }}</div>
+                            <div class="text-2xl font-black text-slate-900 mt-1">
+                                {{ stress.acuteRunKm|formatNumber(1) }} <span class="text-xs font-normal text-gray-500">km</span>
+                            </div>
+                            <div class="text-xxs text-gray-500 mt-1">
+                                in {{ stress.acuteRunCount }} run{{ stress.acuteRunCount == 1 ? '' : 's' }}
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div class="text-xxs uppercase tracking-wider text-gray-500 font-semibold">{{ "Effective Mechanical Load"|trans }}</div>
+                            <div class="text-2xl font-black text-slate-900 mt-1">
+                                {{ stress.acuteEffectiveKm|formatNumber(1) }} <span class="text-xs font-normal text-gray-500">km</span>
+                            </div>
+                            <div class="text-xxs text-gray-500 mt-1">
+                                Runs + Walk(0.25x) + Hike(0.40x)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step Progression Details -->
+                    <div class="p-3.5 bg-gray-50 rounded-lg border border-gray-200 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Prior 21-Day Chronic Base <code class="text-xxs bg-gray-200 px-1 py-0.5 rounded">[T-27, T-7]</code>:</span>
+                            <strong class="text-gray-900">{{ stress.chronicBaseRunKm|formatNumber(1) }} km</strong>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Weekly Volume Step vs Base:</span>
+                            <span>
+                                <strong class="{{ stress.volumeStepKm > stress.allowedStepKm ? 'text-rose-600 font-bold' : 'text-emerald-700 font-bold' }}">
+                                    {{ stress.volumeStepKm >= 0 ? '+' : '' }}{{ stress.volumeStepKm|formatNumber(1) }} km
+                                </strong>
+                                <span class="text-gray-400"> (Allowed: +{{ stress.allowedStepKm|formatNumber(1) }} km)</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                            <span class="text-gray-600">Rolling 7d Long Run vs 30d Peak:</span>
+                            <span>
+                                <strong>{{ stress.longestRunKm|formatNumber(1) }} km</strong>
+                                <span class="text-gray-400"> (Peak: {{ stress.prior30dMaxLongKm|formatNumber(1) }} km)</span>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Long Run Step:</span>
+                            <span>
+                                <strong class="{{ stress.longRunStepKm > stress.allowedLongRunStepKm ? 'text-amber-600' : 'text-emerald-700' }}">
+                                    {{ stress.longRunStepKm >= 0 ? '+' : '' }}{{ stress.longRunStepKm|formatNumber(1) }} km
+                                </strong>
+                                <span class="text-gray-400"> (Allowed: +{{ stress.allowedLongRunStepKm|formatNumber(1) }} km)</span>
+                                <span class="ml-1 text-xxs px-1.5 py-0.5 rounded font-bold uppercase {{ stress.longRunStatus == 'Safe' ? 'bg-emerald-100 text-emerald-800' : (stress.longRunStatus == 'Watch' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">
+                                    {{ stress.longRunStatus }}
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="text-xxs text-gray-500 italic">
+                        * Baseline is explicitly uncoupled from current 7-day rolling window. Long run allowance uses a flat 1.2 km step for runs &le;10 km to prevent false alarms during novice progression.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lens 2: Cardiovascular Strain & Systemic Load (HR-Based) -->
+        <div class="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden flex flex-col justify-between">
+            <div>
+                <div class="px-5 py-3.5 bg-slate-50 border-b border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">💓</span>
+                        <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">{{ "Cardiovascular Load & Systemic Fatigue"|trans }}</h3>
+                    </div>
+                    <span class="text-xxs px-2 py-0.5 rounded font-bold uppercase tracking-wider {{ stress.isTsbLow ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800' }}">
+                        {{ stress.isTsbLow ? 'High Fatigue' : 'Balanced Strain' }}
+                    </span>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <!-- Metric Cards -->
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div class="text-xxs uppercase tracking-wider text-gray-500 font-semibold">{{ "Fitness (CTL)"|trans }}</div>
+                            <div class="text-2xl font-black text-sky-600 mt-1">
+                                {{ stress.ctl|formatNumber(1) }}
+                            </div>
+                            <div class="text-xxs text-gray-400 mt-1">42d cardio base</div>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div class="text-xxs uppercase tracking-wider text-gray-500 font-semibold">{{ "Fatigue (ATL)"|trans }}</div>
+                            <div class="text-2xl font-black text-purple-600 mt-1">
+                                {{ stress.atl|formatNumber(1) }}
+                            </div>
+                            <div class="text-xxs text-gray-400 mt-1">7d acute strain</div>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                            <div class="text-xxs uppercase tracking-wider text-gray-500 font-semibold">{{ "Form (TSB)"|trans }}</div>
+                            <div class="text-2xl font-black {{ stress.tsb >= 0 ? 'text-emerald-600' : (stress.isTsbLow ? 'text-rose-600' : 'text-amber-600') }} mt-1">
+                                {{ stress.tsb|formatNumber(1) }}
+                            </div>
+                            <div class="text-xxs text-gray-400 mt-1">CTL - ATL balance</div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Distribution & HR Context -->
+                    <div class="p-3.5 bg-gray-50 rounded-lg border border-gray-200 space-y-2 text-xs">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Personal Historical TSB Percentile:</span>
+                            <span class="font-bold {{ stress.isTsbLow ? 'text-rose-600' : 'text-slate-800' }}">
+                                {{ stress.tsbPercentile|formatNumber(0) }}th percentile
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Fatigue Flag Threshold:</span>
+                            <span class="text-gray-700">Bottom 10th percentile of your 6-month history</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-200">
+                            <span class="text-gray-600">Heart Rate Reserve (Karvonen):</span>
+                            <span class="text-gray-900 font-medium">Rest {{ stress.athleteRestingHr }} bpm &bull; Max {{ stress.athleteMaxHr }} bpm</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">HR Load Calibration:</span>
+                            <span class="text-emerald-700 font-medium">Personalized to runner history (no cycling bias)</span>
+                        </div>
+                    </div>
+
+                    <div class="text-xxs text-gray-500 italic">
+                        * Uses Karvonen Heart Rate Reserve TRIMP. Evaluated relative to your own empirical history instead of arbitrary cycling power thresholds.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Mechanical Volume Progression Chart -->
+        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>📊</span> {{ "Weekly Effective Mechanical Progression"|trans }}
+                </h3>
+                <span class="text-xxs text-gray-400">{{ "Last 8 Weeks"|trans }}</span>
+            </div>
+            <div class="h-72 w-full" data-echarts-options='{{ volumeChart }}'></div>
+            <div class="text-xxs text-gray-400 text-center">
+                Runs (blue) + Walks/Hikes effective mechanical contribution (gray) vs 21-day chronic baseline (amber dashed).
+            </div>
+        </div>
+
+        <!-- Cardiovascular Strain Curve -->
+        <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-xs space-y-3">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>📈</span> {{ "Cardiovascular Fitness & Fatigue Curve"|trans }}
+                </h3>
+                <span class="text-xxs text-gray-400">{{ "Last 90 Days"|trans }}</span>
+            </div>
+            <div class="h-72 w-full" data-echarts-options='{{ cardioChart }}'></div>
+            <div class="text-xxs text-gray-400 text-center">
+                CTL Fitness (blue), ATL Acute Fatigue (purple), and TSB Freshness Balance (green shaded area).
+            </div>
+        </div>
+    </div>
+
+    <!-- 8-Week Rolling Historical Progression Table -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-xs overflow-hidden">
+        <div class="px-5 py-3.5 bg-slate-50 border-b border-gray-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-base">📅</span>
+                <h3 class="text-sm font-bold text-gray-900 uppercase tracking-wider">{{ "Rolling 7-Day Progression History"|trans }}</h3>
+            </div>
+            <span class="text-xs text-gray-500">{{ "Evaluated with uncoupled 21-day prior baseline"|trans }}</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-600">
+                <thead class="bg-gray-50 text-xxs uppercase tracking-wider text-gray-500 border-b border-gray-200">
+                    <tr>
+                        <th class="py-3 px-4 font-semibold">{{ "Interval"|trans }}</th>
+                        <th class="py-3 px-4 font-semibold text-right">{{ "Run Dist"|trans }}</th>
+                        <th class="py-3 px-4 font-semibold text-right">{{ "Walk / Hike"|trans }}</th>
+                        <th class="py-3 px-4 font-semibold text-right">{{ "Effective Load"|trans }}</th>
+                        <th class="py-3 px-4 font-semibold text-right">{{ "21d Prior Base"|trans }}</th>
+                        <th class="py-3 px-4 font-semibold text-right">{{ "Step Size"|trans }}</th>
+                        <th class="py-3 px-4 font-semibold text-right">{{ "Long Run"|trans }}</th>
+                        <th class="py-3 px-4 font-semibold text-center">{{ "Status"|trans }}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for week in stress.historyWeeks %}
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-4 font-medium text-gray-900 whitespace-nowrap">
+                                {{ week.label }}
+                                {% if loop.first %}
+                                    <span class="ml-1 text-xxs px-1.5 py-0.5 bg-blue-100 text-blue-700 font-bold rounded">Current 7d</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-right font-medium text-slate-800">
+                                {{ week.runKm|formatNumber(1) }} km
+                            </td>
+                            <td class="py-3 px-4 text-right text-gray-500">
+                                {{ (week.walkKm + week.hikeKm)|formatNumber(1) }} km
+                            </td>
+                            <td class="py-3 px-4 text-right font-semibold text-slate-900">
+                                {{ week.effectiveKm|formatNumber(1) }} km
+                            </td>
+                            <td class="py-3 px-4 text-right text-gray-500">
+                                {{ week.chronicBaseKm|formatNumber(1) }} km
+                            </td>
+                            <td class="py-3 px-4 text-right font-semibold {{ week.stepKm > 0 ? (week.status == 'Step-Up' ? 'text-rose-600' : 'text-emerald-700') : 'text-slate-500' }}">
+                                {{ week.stepKm >= 0 ? '+' : '' }}{{ week.stepKm|formatNumber(1) }} km
+                            </td>
+                            <td class="py-3 px-4 text-right font-medium text-slate-800">
+                                {{ week.longestRunKm|formatNumber(1) }} km
+                                {% if week.longRunStepKm > 0 %}
+                                    <span class="text-xxs text-amber-600 block">(+{{ week.longRunStepKm|formatNumber(1) }})</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xxs font-bold uppercase tracking-wider {{ week.status == 'Steady' ? 'bg-emerald-100 text-emerald-800' : (week.status == 'Watch' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800') }}">
+                                    {{ week.status }}
+                                </span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="py-6 text-center text-gray-400">
+                                {{ "No historical intervals recorded yet."|trans }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function updateScoreColor(val) {
+    const el = document.getElementById('sorenessScoreVal');
+    if (!el) return;
+    const num = parseInt(val, 10);
+    if (num >= 5) {
+        el.className = 'text-lg font-extrabold w-8 text-center text-rose-600';
+    } else if (num >= 3) {
+        el.className = 'text-lg font-extrabold w-8 text-center text-amber-600';
+    } else {
+        el.className = 'text-lg font-extrabold w-8 text-center text-emerald-600';
+    }
+}
+</script>
+{% endautoescape %}

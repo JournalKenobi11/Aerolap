@@ -31,7 +31,7 @@ final readonly class DashboardLayout implements \IteratorAggregate
             ['id' => 'dashboardWidget-activityGrid', 'widget' => 'activityGrid', 'width' => 100],
             ['id' => 'dashboardWidget-streaks', 'widget' => 'streaks', 'width' => 33, 'config' => ['subtitle' => null, 'sportTypesToInclude' => []]],
             ['id' => 'dashboardWidget-athleteProfile', 'widget' => 'athleteProfile', 'width' => 33],
-            ['id' => 'dashboardWidget-eddington', 'widget' => 'eddington', 'width' => 33],
+            ['id' => 'dashboardWidget-trainingStress', 'widget' => 'trainingStress', 'width' => 33],
             ['id' => 'dashboardWidget-peakPowerOutputs', 'widget' => 'peakPowerOutputs', 'width' => 50],
             ['id' => 'dashboardWidget-heartRateZones', 'widget' => 'heartRateZones', 'width' => 50],
             ['id' => 'dashboardWidget-monthlyStats', 'widget' => 'monthlyStats', 'width' => 66, 'config' => [

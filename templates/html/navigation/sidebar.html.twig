@@ -57,11 +57,11 @@
                 </a>
             </li>
             <li>
-                <a title="Eddington" href="{{ relativeUrl(path('eddington')) }}" aria-selected="{{ activeSection == 'eddington' ? 'true' : 'false' }}">
+                <a title="{{ "Workload & Stress"|trans }}" href="{{ relativeUrl(path('training_stress')) }}" aria-selected="{{ activeSection == 'training-stress' ? 'true' : 'false' }}">
                     <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4.5V19a1 1 0 0 0 1 1h15M7 14l4-4 4 4 5-5m0 0h-3.207M20 9v3.207"/>
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
-                    <span>Eddington</span>
+                    <span>{{ "Workload & Stress"|trans|ellipses(23) }}</span>
                 </a>
             </li>
             <li>
