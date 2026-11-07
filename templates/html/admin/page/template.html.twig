@@ -12,11 +12,13 @@
         <meta name="dispatch-command-url" content="{{ relativeUrl(path('admin_dispatch_command')) }}">
         <meta name="import-status-url" content="{{ relativeUrl(path('admin_import_status')) }}">
         <meta name="js-dist-url" content="{{ relativeUrl('js/dist/') }}">
-        <link rel="icon" type="image/x-icon" href="{{ relativeUrl('assets/images/logo.svg') }}">
+        <link rel="icon" type="image/x-icon" href="{{ relativeUrl('favicon.ico') }}">
+        <link rel="icon" type="image/svg+xml" href="{{ relativeUrl('assets/images/logo.svg') }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ relativeUrl('assets/images/manifest/icon-192.png') }}">
         <link href="{{ relativeUrl(asset('css/dist/tailwind.min.css')) }}" rel="stylesheet"/>
         {% block stylesheets %}{% endblock %}
         <script>
-            document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+            document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
         </script>
     </head>
     <body class="min-h-screen bg-gray-50 text-gray-900 antialiased admin">

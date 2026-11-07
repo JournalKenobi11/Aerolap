@@ -30,9 +30,11 @@
     <meta name="js-dist-version" content="{{ assetVersion() }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ relativeUrl('assets/images/manifest/icon-apple-180.maskable.png') }}">
     <link href="{{ relativeUrl('manifest.json') }}" rel="manifest" crossorigin="use-credentials">
-    <link rel="icon" type="image/x-icon" href="{{ relativeUrl('assets/images/logo.svg') }}">
+    <link rel="icon" type="image/x-icon" href="{{ relativeUrl('favicon.ico') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ relativeUrl('assets/images/logo.svg') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ relativeUrl('assets/images/manifest/icon-192.png') }}">
     <script>
-        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+        document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
         if (localStorage.getItem('sideNavCollapsed') === 'true') {
             document.documentElement.setAttribute('data-sidebar-collapsed', '');
         }

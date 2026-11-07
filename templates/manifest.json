@@ -18,7 +18,7 @@
   ],
   "orientation": "portrait",
   "theme_color": "#2DB6FA",
-  "background_color": "#f9fafb",
+  "background_color": "#0F1115",
   "icons": [
     {
       "src": "[APP_BASE_PATH]/assets/images/manifest/icon-192.png",

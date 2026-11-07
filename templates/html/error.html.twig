@@ -6,9 +6,11 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
         <meta name="theme-color" content="#2DB6FA">
-        <link rel="icon" type="image/x-icon" href="{{ relativeUrl('assets/images/logo.svg') }}">
+        <link rel="icon" type="image/x-icon" href="{{ relativeUrl('favicon.ico') }}">
+        <link rel="icon" type="image/svg+xml" href="{{ relativeUrl('assets/images/logo.svg') }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ relativeUrl('assets/images/manifest/icon-192.png') }}">
         <script>
-            document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+            document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
         </script>
         <link href="{{ relativeUrl(asset('css/dist/tailwind.min.css')) }}" rel="stylesheet"/>
     </head>

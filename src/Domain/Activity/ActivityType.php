@@ -155,7 +155,7 @@ enum ActivityType: string implements TranslatableInterface
         return match ($this) {
             ActivityType::RIDE => 'emerald-600',
             ActivityType::RUN => 'sky-500',
-            ActivityType::WALK => 'yellow-300',
+            ActivityType::WALK => 'indigo-400',
             ActivityType::WATER_SPORTS => 'blue-600',
             ActivityType::WINTER_SPORTS => 'red-600',
             default => 'gray-600',

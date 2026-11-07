@@ -9,16 +9,18 @@
         <meta name="mobile-web-app-title" content="{{ appName }}">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="js-dist-url" content="{{ relativeUrl('js/dist/') }}">
-        <link rel="icon" type="image/x-icon" href="{{ relativeUrl('assets/images/logo.svg') }}">
+        <link rel="icon" type="image/x-icon" href="{{ relativeUrl('favicon.ico') }}">
+        <link rel="icon" type="image/svg+xml" href="{{ relativeUrl('assets/images/logo.svg') }}">
+        <link rel="icon" type="image/png" sizes="192x192" href="{{ relativeUrl('assets/images/manifest/icon-192.png') }}">
         <link href="{{ relativeUrl(asset('css/dist/tailwind.min.css')) }}" rel="stylesheet"/>
         <script>
-            document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'light');
+            document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') || 'dark');
         </script>
     </head>
     <body class="min-h-screen bg-gray-50 text-gray-900 antialiased admin">
     <section class="flex min-h-screen flex-col justify-center px-6 py-12 sm:px-12">
         <div class="mx-auto w-full max-w-sm">
-            <img class="mx-auto h-12 w-auto" src="{{ relativeUrl('assets/images/logo.svg') }}" alt="{{ appName }}">
+            <img class="mx-auto h-14 w-auto rounded-xl shadow-xs" src="{{ relativeUrl('assets/images/logo.svg') }}" alt="{{ appName }}">
             <h1 class="mt-6 text-center text-2xl font-bold tracking-tight">{{ appName }}</h1>
             <p class="mt-1 text-center text-sm text-gray-500">{{ "Sign in to the admin panel"|trans({}, 'admin') }}</p>
             <div class="mt-6 p-6 bg-white border border-gray-200 rounded-lg shadow-xs">
