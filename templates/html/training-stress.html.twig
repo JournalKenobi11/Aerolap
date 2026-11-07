@@ -67,10 +67,10 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
         <!-- Metric 1: Cardiovascular Load (ICS) -->
-        <div class="flex flex-col justify-between p-3 bg-white border border-gray-200 rounded-lg shadow-xs">
+        <div class="flex flex-col justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-xs space-y-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <h4 class="text-sm font-semibold text-gray-900">{{ "Cardiovascular Load (ICS)"|trans }}</h4>
+                    <h4 class="text-sm font-semibold text-gray-900">{{ "Cardiovascular Load"|trans }}</h4>
                     <button class="hidden lg:block ml-1" data-popover-target="popover-ics" data-popover-placement="right" type="button">
                         <svg class="size-4 text-gray-400 hover:text-gray-500" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
                     </button>
@@ -88,25 +88,31 @@
                         </div>
                     </div>
                 </div>
-                <span class="text-xxs px-1.5 py-0.5 rounded font-medium {{ stress.cardioAcwr > 1.3 ? 'bg-red-100 text-red-700' : (stress.cardioAcwr < 0.85 ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700') }}">
-                    ACWR {{ stress.cardioAcwr|formatNumber(2) }}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {{ stress.cardioAcwr > 1.3 ? 'bg-red-100 text-red-800' : (stress.cardioAcwr < 0.85 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
+                    {{ stress.cardioStatus }}
                 </span>
             </div>
-            <div class="mt-2">
-                <div class="text-xl font-bold text-gray-900">
-                    {{ stress.acuteIcs|formatNumber(0) }} <span class="text-xs font-normal text-gray-500">ICS</span>
+            <div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold {{ stress.cardioAcwr > 1.3 ? 'text-red-600' : (stress.cardioAcwr < 0.85 ? 'text-blue-600' : 'text-green-600') }}">
+                        {{ stress.cardioAcwr|formatNumber(2) }}
+                    </span>
+                    <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">{{ "Cardio ACWR"|trans }}</span>
                 </div>
-                <div class="text-xs text-gray-500 mt-0.5">
-                    {{ "21d Baseline:"|trans }} {{ stress.chronicBaseIcs|formatNumber(0) }} ICS &bull; {{ stress.cardioStatus }}
+                <div class="text-xs text-gray-600 font-medium mt-1">
+                    {{ stress.acuteIcs|formatNumber(0) }} ICS <span class="text-gray-400 font-normal">/ {{ stress.chronicBaseIcs|formatNumber(0) }} 21d base</span>
+                </div>
+                <div class="text-xxs text-gray-400 mt-0.5">
+                    {{ "Optimal zone: 0.85 – 1.25"|trans }}
                 </div>
             </div>
         </div>
 
         <!-- Metric 2: Structural Tissue Load (STL) -->
-        <div class="flex flex-col justify-between p-3 bg-white border border-gray-200 rounded-lg shadow-xs">
+        <div class="flex flex-col justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-xs space-y-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <h4 class="text-sm font-semibold text-gray-900">{{ "Structural Tissue Load (STL)"|trans }}</h4>
+                    <h4 class="text-sm font-semibold text-gray-900">{{ "Structural Tissue Load"|trans }}</h4>
                     <button class="hidden lg:block ml-1" data-popover-target="popover-stl" data-popover-placement="right" type="button">
                         <svg class="size-4 text-gray-400 hover:text-gray-500" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path></svg>
                     </button>
@@ -124,22 +130,28 @@
                         </div>
                     </div>
                 </div>
-                <span class="text-xxs px-1.5 py-0.5 rounded font-medium {{ stress.tissueAcwr > 1.25 ? 'bg-red-100 text-red-700' : (stress.tissueAcwr < 0.80 ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700') }}">
-                    ACWR {{ stress.tissueAcwr|formatNumber(2) }}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {{ stress.tissueAcwr > 1.25 ? 'bg-red-100 text-red-800' : (stress.tissueAcwr < 0.80 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800') }}">
+                    {{ stress.tissueStatus }}
                 </span>
             </div>
-            <div class="mt-2">
-                <div class="text-xl font-bold text-gray-900">
-                    {{ stress.acuteStl|formatNumber(0) }} <span class="text-xs font-normal text-gray-500">STL</span>
+            <div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold {{ stress.tissueAcwr > 1.25 ? 'text-red-600' : (stress.tissueAcwr < 0.80 ? 'text-blue-600' : 'text-green-600') }}">
+                        {{ stress.tissueAcwr|formatNumber(2) }}
+                    </span>
+                    <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">{{ "Tissue ACWR"|trans }}</span>
                 </div>
-                <div class="text-xs text-gray-500 mt-0.5">
-                    {{ "21d Baseline:"|trans }} {{ stress.chronicBaseStl|formatNumber(0) }} STL &bull; {{ stress.tissueStatus }}
+                <div class="text-xs text-gray-600 font-medium mt-1">
+                    {{ stress.acuteStl|formatNumber(0) }} STL <span class="text-gray-400 font-normal">/ {{ stress.chronicBaseStl|formatNumber(0) }} 21d base</span>
+                </div>
+                <div class="text-xxs text-gray-400 mt-0.5">
+                    {{ "Safe zone: 0.80 – 1.15 (-13% taper step)"|trans }}
                 </div>
             </div>
         </div>
 
         <!-- Metric 3: Engine vs. Chassis Divergence (TCDI) -->
-        <div class="flex flex-col justify-between p-3 bg-white border border-gray-200 rounded-lg shadow-xs">
+        <div class="flex flex-col justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-xs space-y-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <h4 class="text-sm font-semibold text-gray-900">{{ "Tissue-Cardio Divergence"|trans }}</h4>
@@ -159,22 +171,28 @@
                         </div>
                     </div>
                 </div>
-                <span class="text-xxs px-1.5 py-0.5 rounded font-medium {{ stress.divergence > 0.20 ? 'bg-red-100 text-red-700' : (stress.divergence < -0.15 ? 'bg-teal-100 text-teal-700' : 'bg-green-100 text-green-700') }}">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold {{ stress.divergence > 0.20 ? 'bg-red-100 text-red-800' : (stress.divergence < -0.15 ? 'bg-teal-100 text-teal-800' : 'bg-green-100 text-green-800') }}">
                     {{ stress.divergenceStatus|upper }}
                 </span>
             </div>
-            <div class="mt-2">
-                <div class="text-xl font-bold {{ stress.divergence > 0.20 ? 'text-red-600' : (stress.divergence < -0.15 ? 'text-teal-700' : 'text-green-600') }}">
-                    {{ stress.divergence >= 0 ? '+' : '' }}{{ stress.divergence|formatNumber(2) }}
+            <div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold {{ stress.divergence > 0.20 ? 'text-red-600' : (stress.divergence < -0.15 ? 'text-teal-700' : 'text-green-600') }}">
+                        {{ stress.divergence >= 0 ? '+' : '' }}{{ stress.divergence|formatNumber(2) }}
+                    </span>
+                    <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">{{ "TCDI Index"|trans }}</span>
                 </div>
-                <div class="text-xs text-gray-500 mt-0.5 truncate">
+                <div class="text-xs text-gray-600 font-medium mt-1 truncate">
                     {{ stress.divergenceLabel }}
+                </div>
+                <div class="text-xxs text-gray-400 mt-0.5">
+                    {{ "Tissue ACWR (0.87) - Cardio ACWR (1.00)"|trans }}
                 </div>
             </div>
         </div>
 
         <!-- Metric 4: Weekly Running Volume & Long Run -->
-        <div class="flex flex-col justify-between p-3 bg-white border border-gray-200 rounded-lg shadow-xs">
+        <div class="flex flex-col justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-xs space-y-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
                     <h4 class="text-sm font-semibold text-gray-900">{{ "Weekly Running Distance"|trans }}</h4>
@@ -194,16 +212,22 @@
                         </div>
                     </div>
                 </div>
-                <span class="text-xxs px-1.5 py-0.5 rounded font-medium bg-gray-100 text-gray-700">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 text-gray-800">
                     {{ stress.acuteRunCount }} {{ stress.acuteRunCount == 1 ? 'run' : 'runs' }}
                 </span>
             </div>
-            <div class="mt-2">
-                <div class="text-xl font-bold text-gray-900">
-                    {{ stress.acuteRunKm|formatNumber(1) }} <span class="text-xs font-normal text-gray-500">km</span>
+            <div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-extrabold text-gray-900">
+                        {{ stress.acuteRunKm|formatNumber(1) }}
+                    </span>
+                    <span class="text-xs font-medium text-gray-400 uppercase tracking-wider">km</span>
                 </div>
-                <div class="text-xs text-gray-500 mt-0.5 truncate">
+                <div class="text-xs text-gray-600 font-medium mt-1 truncate">
                     {{ "Long run:"|trans }} {{ stress.longestRunKm|formatNumber(1) }} km &bull; {{ stress.volumeStepKm >= 0 ? '+' : '' }}{{ stress.volumeStepKm|formatNumber(1) }} km vs base
+                </div>
+                <div class="text-xxs text-gray-400 mt-0.5">
+                    {{ "21d base: 20.4 km/wk (-16% taper)"|trans }}
                 </div>
             </div>
         </div>
