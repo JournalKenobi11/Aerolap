@@ -88,6 +88,68 @@ final readonly class StreamBasedActivityHeartRateRepository implements ActivityH
         return RelativeHeartRateDistribution::fromSecondsPerPercentage($secondsPerPercentage);
     }
 
+    /**
+     * @return array{
+     *     perMonth: array<string, TimeInHeartRateZones>,
+     *     perMonthAndSportType: array<string, array<string, TimeInHeartRateZones>>
+     * }
+     */
+    public function findMonthlyTimeInHeartRateZones(): array
+    {
+        $perMonth = [];
+        $perMonthAndSportType = [];
+
+        foreach ($this->fetchHeartRateDistributions() as $result) {
+            $heartRateDistribution = Json::uncompressAndDecode($result['data']);
+            if ([] === $heartRateDistribution) {
+                continue;
+            }
+
+            $sportType = SportType::tryFrom($result['sportType']);
+            if (!$sportType instanceof SportType) {
+                continue;
+            }
+
+            $startDate = SerializableDateTime::fromString($result['startDateTime']);
+            $monthId = substr($result['startDateTime'], 0, 7);
+
+            $zoneSeconds = $this->zoneSecondsFor(
+                sportType: $sportType,
+                on: $startDate,
+                heartRateDistribution: $heartRateDistribution,
+            );
+
+            if (!isset($perMonth[$monthId])) {
+                $perMonth[$monthId] = $this->emptyZones();
+            }
+            if (!isset($perMonthAndSportType[$monthId][$sportType->value])) {
+                $perMonthAndSportType[$monthId][$sportType->value] = $this->emptyZones();
+            }
+
+            foreach ($zoneSeconds as $zoneName => $secondsInZone) {
+                $perMonth[$monthId][$zoneName] += $secondsInZone;
+                $perMonthAndSportType[$monthId][$sportType->value][$zoneName] += $secondsInZone;
+            }
+        }
+
+        $resultPerMonth = [];
+        foreach ($perMonth as $monthId => $zoneSeconds) {
+            $resultPerMonth[$monthId] = $this->toTimeInHeartRateZones($zoneSeconds);
+        }
+
+        $resultPerMonthAndSportType = [];
+        foreach ($perMonthAndSportType as $monthId => $sports) {
+            foreach ($sports as $sportKey => $zoneSeconds) {
+                $resultPerMonthAndSportType[$monthId][$sportKey] = $this->toTimeInHeartRateZones($zoneSeconds);
+            }
+        }
+
+        return [
+            'perMonth' => $resultPerMonth,
+            'perMonthAndSportType' => $resultPerMonthAndSportType,
+        ];
+    }
+
     private function aggregate(): HeartRateZoneTotals
     {
         $now = $this->clock->getCurrentDateTimeImmutable();

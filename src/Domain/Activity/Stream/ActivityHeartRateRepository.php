@@ -16,4 +16,12 @@ interface ActivityHeartRateRepository
     public function findTimeInHeartRateZonesForLast30Days(): TimeInHeartRateZonesForRollingWindow;
 
     public function findRelativeHeartRateDistribution(): RelativeHeartRateDistribution;
+
+    /**
+     * @return array{
+     *     perMonth: array<string, TimeInHeartRateZones>,
+     *     perMonthAndSportType: array<string, array<string, TimeInHeartRateZones>>
+     * }
+     */
+    public function findMonthlyTimeInHeartRateZones(): array;
 }

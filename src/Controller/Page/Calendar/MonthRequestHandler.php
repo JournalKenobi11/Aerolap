@@ -8,6 +8,7 @@ use App\Application\Navigation\NavigationSection;
 use App\Application\PageRenderer;
 use App\Domain\Activity\ActivityRepository;
 use App\Domain\Activity\FindFirstActivityStartDate\FindFirstActivityStartDate;
+use App\Domain\Activity\Stream\ActivityHeartRateRepository;
 use App\Domain\Calendar\Calendar;
 use App\Domain\Calendar\FindMonthlyStats\FindMonthlyStats;
 use App\Domain\Calendar\Month;
@@ -34,6 +35,7 @@ final readonly class MonthRequestHandler
         private Clock $clock,
         private PageRenderer $pageRenderer,
         private Environment $twig,
+        private ActivityHeartRateRepository $activityHeartRateRepository,
     ) {
     }
 
@@ -68,11 +70,13 @@ final readonly class MonthRequestHandler
     private function renderFor(Month $month): string
     {
         $monthlyStats = $this->queryBus->ask(new FindMonthlyStats());
+        $monthlyHrZones = $this->activityHeartRateRepository->findMonthlyTimeInHeartRateZones();
 
         return $this->twig->load('html/calendar/month.html.twig')->render([
             'hasPreviousMonth' => $month->getId() !== $monthlyStats->getFirstMonth()?->getId(),
             'hasNextMonth' => $month->getId() !== Month::fromDate($this->clock->getCurrentDateTimeImmutable())->getId(),
             'statistics' => $monthlyStats->getForMonth($month),
+            'heartRateZones' => $monthlyHrZones['perMonth'][$month->getId()] ?? null,
             'calendar' => Calendar::create(
                 month: $month,
                 activities: $this->activityRepository->findByDateRange(

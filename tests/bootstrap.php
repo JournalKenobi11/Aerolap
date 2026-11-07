@@ -8,6 +8,15 @@ use Symfony\Component\Dotenv\Dotenv;
 
 require dirname(__DIR__).'/vendor/autoload.php';
 
+spl_autoload_register(function ($class) {
+    if (str_starts_with($class, 'App\\Tests\\')) {
+        $file = __DIR__ . '/' . str_replace('\\', '/', substr($class, 10)) . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    }
+});
+
 if (file_exists(dirname(__DIR__).'/config/bootstrap.php')) {
     require dirname(__DIR__).'/config/bootstrap.php';
 } elseif (method_exists(Dotenv::class, 'bootEnv')) {
@@ -23,13 +32,15 @@ $_SERVER['IMPORT_MODE'] = $_ENV['IMPORT_MODE'] = ImportMode::STRAVA_API->value;
 // committed to the SQLite file instead of being wrapped in (and rolled back
 // with) the per-test transaction. Every test then runs against this schema,
 // with DAMA rolling back only the data between tests.
-$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
-$kernel->boot();
+if (($_SERVER['APP_ENV'] ?? '') === 'test') {
+    $kernel = new Kernel('test', (bool) ($_SERVER['APP_DEBUG'] ?? false));
+    $kernel->boot();
 
-/** @var EntityManagerInterface $entityManager */
-$entityManager = $kernel->getContainer()->get('doctrine')->getManager();
-$schemaTool = new SchemaTool($entityManager);
-$schemaTool->dropDatabase();
-$schemaTool->createSchema($entityManager->getMetadataFactory()->getAllMetadata());
+    /** @var EntityManagerInterface $entityManager */
+    $entityManager = $kernel->getContainer()->get('doctrine')->getManager();
+    $schemaTool = new SchemaTool($entityManager);
+    $schemaTool->dropDatabase();
+    $schemaTool->createSchema($entityManager->getMetadataFactory()->getAllMetadata());
 
-$kernel->shutdown();
+    $kernel->shutdown();
+}

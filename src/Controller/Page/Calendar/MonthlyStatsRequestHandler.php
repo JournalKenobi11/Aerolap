@@ -7,6 +7,7 @@ namespace App\Controller\Page\Calendar;
 use App\Application\Navigation\NavigationSection;
 use App\Application\PageRenderer;
 use App\Domain\Activity\SportType\SportTypeRepository;
+use App\Domain\Activity\Stream\ActivityHeartRateRepository;
 use App\Domain\Calendar\FindMonthlyStats\FindMonthlyStats;
 use App\Domain\Calendar\Month;
 use App\Domain\Calendar\Months;
@@ -29,6 +30,7 @@ final readonly class MonthlyStatsRequestHandler
         private Clock $clock,
         private Environment $twig,
         private PageRenderer $pageRenderer,
+        private ActivityHeartRateRepository $activityHeartRateRepository,
     ) {
     }
 
@@ -48,6 +50,7 @@ final readonly class MonthlyStatsRequestHandler
     private function renderFor(): string
     {
         $monthlyStats = $this->queryBus->ask(new FindMonthlyStats());
+        $monthlyHrZones = $this->activityHeartRateRepository->findMonthlyTimeInHeartRateZones();
 
         $firstMonth = $monthlyStats->getFirstMonth();
         $allMonths = $firstMonth instanceof Month ? Months::create(
@@ -59,6 +62,8 @@ final readonly class MonthlyStatsRequestHandler
             'monthlyStatistics' => $monthlyStats,
             'months' => $allMonths->reverse(),
             'sportTypes' => $this->sportTypeRepository->findAll(),
+            'heartRateZonesPerMonth' => $monthlyHrZones['perMonth'],
+            'heartRateZonesPerMonthAndSportType' => $monthlyHrZones['perMonthAndSportType'],
         ]);
     }
 }

@@ -49,3 +49,5 @@ phpstan.neon
 ###< android ###
 
 generate_pace_vs_hr_plot.py
+Screenshot*.png
+*.png
