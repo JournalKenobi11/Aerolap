@@ -32,7 +32,7 @@
                             {{ "Cal."|trans }}
                         </th>
                         <th scope="col" class="min-w-52">
-                            {{ "HR Zones"|trans }}
+                            {{ "Run HR Zones"|trans }}
                         </th>
                     </tr>
                     </thead>
@@ -82,19 +82,19 @@
                                                 <div class="grow h-3 bg-gray-200 rounded-full overflow-hidden flex shadow-inner"
                                                      title="Z1: {{ hrZoneTotals.getPercentageInZoneOne() }}%, Z2: {{ hrZoneTotals.getPercentageInZoneTwo() }}%, Z3: {{ hrZoneTotals.getPercentageInZoneThree() }}%, Z4: {{ hrZoneTotals.getPercentageInZoneFour() }}%, Z5: {{ hrZoneTotals.getPercentageInZoneFive() }}%">
                                                     {% if hrZoneTotals.getPercentageInZoneOne() > 0 %}
-                                                        <div class="h-full bg-sky-400" style="width: {{ hrZoneTotals.getPercentageInZoneOne() }}%"></div>
+                                                        <div class="h-full bg-[#DF584A]" style="width: {{ hrZoneTotals.getPercentageInZoneOne() }}%"></div>
                                                     {% endif %}
                                                     {% if hrZoneTotals.getPercentageInZoneTwo() > 0 %}
-                                                        <div class="h-full bg-emerald-500" style="width: {{ hrZoneTotals.getPercentageInZoneTwo() }}%"></div>
+                                                        <div class="h-full bg-[#D63522]" style="width: {{ hrZoneTotals.getPercentageInZoneTwo() }}%"></div>
                                                     {% endif %}
                                                     {% if hrZoneTotals.getPercentageInZoneThree() > 0 %}
-                                                        <div class="h-full bg-amber-400" style="width: {{ hrZoneTotals.getPercentageInZoneThree() }}%"></div>
+                                                        <div class="h-full bg-[#BD2D22]" style="width: {{ hrZoneTotals.getPercentageInZoneThree() }}%"></div>
                                                     {% endif %}
                                                     {% if hrZoneTotals.getPercentageInZoneFour() > 0 %}
-                                                        <div class="h-full bg-orange-500" style="width: {{ hrZoneTotals.getPercentageInZoneFour() }}%"></div>
+                                                        <div class="h-full bg-[#942319]" style="width: {{ hrZoneTotals.getPercentageInZoneFour() }}%"></div>
                                                     {% endif %}
                                                     {% if hrZoneTotals.getPercentageInZoneFive() > 0 %}
-                                                        <div class="h-full bg-rose-600" style="width: {{ hrZoneTotals.getPercentageInZoneFive() }}%"></div>
+                                                        <div class="h-full bg-[#6A1009]" style="width: {{ hrZoneTotals.getPercentageInZoneFive() }}%"></div>
                                                     {% endif %}
                                                 </div>
                                                 <span class="text-xxs text-gray-500 font-medium shrink-0">
@@ -102,11 +102,11 @@
                                                 </span>
                                             </div>
                                             <div class="flex items-center justify-between text-xxs font-mono text-gray-400 leading-none">
-                                                <span class="{{ hrZoneTotals.getPercentageInZoneOne() > 0 ? 'text-sky-600 font-semibold' : 'text-gray-300' }}">Z1 {{ hrZoneTotals.getPercentageInZoneOne() }}%</span>
-                                                <span class="{{ hrZoneTotals.getPercentageInZoneTwo() > 0 ? 'text-emerald-600 font-semibold' : 'text-gray-300' }}">Z2 {{ hrZoneTotals.getPercentageInZoneTwo() }}%</span>
-                                                <span class="{{ hrZoneTotals.getPercentageInZoneThree() > 0 ? 'text-amber-600 font-semibold' : 'text-gray-300' }}">Z3 {{ hrZoneTotals.getPercentageInZoneThree() }}%</span>
-                                                <span class="{{ hrZoneTotals.getPercentageInZoneFour() > 0 ? 'text-orange-600 font-semibold' : 'text-gray-300' }}">Z4 {{ hrZoneTotals.getPercentageInZoneFour() }}%</span>
-                                                <span class="{{ hrZoneTotals.getPercentageInZoneFive() > 0 ? 'text-rose-600 font-semibold' : 'text-gray-300' }}">Z5 {{ hrZoneTotals.getPercentageInZoneFive() }}%</span>
+                                                <span class="{{ hrZoneTotals.getPercentageInZoneOne() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if hrZoneTotals.getPercentageInZoneOne() > 0 %}style="color: #DF584A"{% endif %}>Z1 {{ hrZoneTotals.getPercentageInZoneOne() }}%</span>
+                                                <span class="{{ hrZoneTotals.getPercentageInZoneTwo() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if hrZoneTotals.getPercentageInZoneTwo() > 0 %}style="color: #D63522"{% endif %}>Z2 {{ hrZoneTotals.getPercentageInZoneTwo() }}%</span>
+                                                <span class="{{ hrZoneTotals.getPercentageInZoneThree() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if hrZoneTotals.getPercentageInZoneThree() > 0 %}style="color: #BD2D22"{% endif %}>Z3 {{ hrZoneTotals.getPercentageInZoneThree() }}%</span>
+                                                <span class="{{ hrZoneTotals.getPercentageInZoneFour() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if hrZoneTotals.getPercentageInZoneFour() > 0 %}style="color: #942319"{% endif %}>Z4 {{ hrZoneTotals.getPercentageInZoneFour() }}%</span>
+                                                <span class="{{ hrZoneTotals.getPercentageInZoneFive() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if hrZoneTotals.getPercentageInZoneFive() > 0 %}style="color: #6A1009"{% endif %}>Z5 {{ hrZoneTotals.getPercentageInZoneFive() }}%</span>
                                             </div>
                                         </div>
                                     {% else %}
@@ -144,40 +144,44 @@
                                             {{ totalsForSportType.calories|formatNumber(0) }}<span class="text-xxs ml-px">kcal</span>
                                         </td>
                                         <td class="w-60 py-2 px-3">
-                                            {% set sportHrZoneTotals = heartRateZonesPerMonthAndSportType[month.getId()][sportType.value] ?? null %}
-                                            {% if sportHrZoneTotals and sportHrZoneTotals.totalTimeInSeconds > 0 %}
-                                                <div class="space-y-1">
-                                                    <div class="flex items-center gap-2">
-                                                        <div class="grow h-2 bg-gray-200 rounded-full overflow-hidden flex shadow-inner"
-                                                             title="Z1: {{ sportHrZoneTotals.getPercentageInZoneOne() }}%, Z2: {{ sportHrZoneTotals.getPercentageInZoneTwo() }}%, Z3: {{ sportHrZoneTotals.getPercentageInZoneThree() }}%, Z4: {{ sportHrZoneTotals.getPercentageInZoneFour() }}%, Z5: {{ sportHrZoneTotals.getPercentageInZoneFive() }}%">
-                                                            {% if sportHrZoneTotals.getPercentageInZoneOne() > 0 %}
-                                                                <div class="h-full bg-sky-400" style="width: {{ sportHrZoneTotals.getPercentageInZoneOne() }}%"></div>
-                                                            {% endif %}
-                                                            {% if sportHrZoneTotals.getPercentageInZoneTwo() > 0 %}
-                                                                <div class="h-full bg-emerald-500" style="width: {{ sportHrZoneTotals.getPercentageInZoneTwo() }}%"></div>
-                                                            {% endif %}
-                                                            {% if sportHrZoneTotals.getPercentageInZoneThree() > 0 %}
-                                                                <div class="h-full bg-amber-400" style="width: {{ sportHrZoneTotals.getPercentageInZoneThree() }}%"></div>
-                                                            {% endif %}
-                                                            {% if sportHrZoneTotals.getPercentageInZoneFour() > 0 %}
-                                                                <div class="h-full bg-orange-500" style="width: {{ sportHrZoneTotals.getPercentageInZoneFour() }}%"></div>
-                                                            {% endif %}
-                                                            {% if sportHrZoneTotals.getPercentageInZoneFive() > 0 %}
-                                                                <div class="h-full bg-rose-600" style="width: {{ sportHrZoneTotals.getPercentageInZoneFive() }}%"></div>
-                                                            {% endif %}
+                                            {% if sportType.value == 'Run' or sportType.getActivityType().value == 'run' %}
+                                                {% set sportHrZoneTotals = heartRateZonesPerMonthAndSportType[month.getId()][sportType.value] ?? null %}
+                                                {% if sportHrZoneTotals and sportHrZoneTotals.totalTimeInSeconds > 0 %}
+                                                    <div class="space-y-1">
+                                                        <div class="flex items-center gap-2">
+                                                            <div class="grow h-2 bg-gray-200 rounded-full overflow-hidden flex shadow-inner"
+                                                                 title="Z1: {{ sportHrZoneTotals.getPercentageInZoneOne() }}%, Z2: {{ sportHrZoneTotals.getPercentageInZoneTwo() }}%, Z3: {{ sportHrZoneTotals.getPercentageInZoneThree() }}%, Z4: {{ sportHrZoneTotals.getPercentageInZoneFour() }}%, Z5: {{ sportHrZoneTotals.getPercentageInZoneFive() }}%">
+                                                                {% if sportHrZoneTotals.getPercentageInZoneOne() > 0 %}
+                                                                    <div class="h-full bg-[#DF584A]" style="width: {{ sportHrZoneTotals.getPercentageInZoneOne() }}%"></div>
+                                                                {% endif %}
+                                                                {% if sportHrZoneTotals.getPercentageInZoneTwo() > 0 %}
+                                                                    <div class="h-full bg-[#D63522]" style="width: {{ sportHrZoneTotals.getPercentageInZoneTwo() }}%"></div>
+                                                                {% endif %}
+                                                                {% if sportHrZoneTotals.getPercentageInZoneThree() > 0 %}
+                                                                    <div class="h-full bg-[#BD2D22]" style="width: {{ sportHrZoneTotals.getPercentageInZoneThree() }}%"></div>
+                                                                {% endif %}
+                                                                {% if sportHrZoneTotals.getPercentageInZoneFour() > 0 %}
+                                                                    <div class="h-full bg-[#942319]" style="width: {{ sportHrZoneTotals.getPercentageInZoneFour() }}%"></div>
+                                                                {% endif %}
+                                                                {% if sportHrZoneTotals.getPercentageInZoneFive() > 0 %}
+                                                                    <div class="h-full bg-[#6A1009]" style="width: {{ sportHrZoneTotals.getPercentageInZoneFive() }}%"></div>
+                                                                {% endif %}
+                                                            </div>
+                                                            <span class="text-xxs text-gray-500 shrink-0">
+                                                                {{ (sportHrZoneTotals.totalTimeInSeconds / 60)|formatNumber(0) }}m
+                                                            </span>
                                                         </div>
-                                                        <span class="text-xxs text-gray-500 shrink-0">
-                                                            {{ (sportHrZoneTotals.totalTimeInSeconds / 60)|formatNumber(0) }}m
-                                                        </span>
+                                                        <div class="flex items-center justify-between text-xxs font-mono text-gray-400 leading-none">
+                                                            <span class="{{ sportHrZoneTotals.getPercentageInZoneOne() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if sportHrZoneTotals.getPercentageInZoneOne() > 0 %}style="color: #DF584A"{% endif %}>Z1 {{ sportHrZoneTotals.getPercentageInZoneOne() }}%</span>
+                                                            <span class="{{ sportHrZoneTotals.getPercentageInZoneTwo() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if sportHrZoneTotals.getPercentageInZoneTwo() > 0 %}style="color: #D63522"{% endif %}>Z2 {{ sportHrZoneTotals.getPercentageInZoneTwo() }}%</span>
+                                                            <span class="{{ sportHrZoneTotals.getPercentageInZoneThree() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if sportHrZoneTotals.getPercentageInZoneThree() > 0 %}style="color: #BD2D22"{% endif %}>Z3 {{ sportHrZoneTotals.getPercentageInZoneThree() }}%</span>
+                                                            <span class="{{ sportHrZoneTotals.getPercentageInZoneFour() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if sportHrZoneTotals.getPercentageInZoneFour() > 0 %}style="color: #942319"{% endif %}>Z4 {{ sportHrZoneTotals.getPercentageInZoneFour() }}%</span>
+                                                            <span class="{{ sportHrZoneTotals.getPercentageInZoneFive() > 0 ? 'font-semibold' : 'text-gray-300' }}" {% if sportHrZoneTotals.getPercentageInZoneFive() > 0 %}style="color: #6A1009"{% endif %}>Z5 {{ sportHrZoneTotals.getPercentageInZoneFive() }}%</span>
+                                                        </div>
                                                     </div>
-                                                    <div class="flex items-center justify-between text-xxs font-mono text-gray-400 leading-none">
-                                                        <span class="{{ sportHrZoneTotals.getPercentageInZoneOne() > 0 ? 'text-sky-600 font-semibold' : 'text-gray-300' }}">Z1 {{ sportHrZoneTotals.getPercentageInZoneOne() }}%</span>
-                                                        <span class="{{ sportHrZoneTotals.getPercentageInZoneTwo() > 0 ? 'text-emerald-600 font-semibold' : 'text-gray-300' }}">Z2 {{ sportHrZoneTotals.getPercentageInZoneTwo() }}%</span>
-                                                        <span class="{{ sportHrZoneTotals.getPercentageInZoneThree() > 0 ? 'text-amber-600 font-semibold' : 'text-gray-300' }}">Z3 {{ sportHrZoneTotals.getPercentageInZoneThree() }}%</span>
-                                                        <span class="{{ sportHrZoneTotals.getPercentageInZoneFour() > 0 ? 'text-orange-600 font-semibold' : 'text-gray-300' }}">Z4 {{ sportHrZoneTotals.getPercentageInZoneFour() }}%</span>
-                                                        <span class="{{ sportHrZoneTotals.getPercentageInZoneFive() > 0 ? 'text-rose-600 font-semibold' : 'text-gray-300' }}">Z5 {{ sportHrZoneTotals.getPercentageInZoneFive() }}%</span>
-                                                    </div>
-                                                </div>
+                                                {% else %}
+                                                    <span class="text-gray-300 text-xxs italic">—</span>
+                                                {% endif %}
                                             {% else %}
                                                 <span class="text-gray-300 text-xxs italic">—</span>
                                             {% endif %}

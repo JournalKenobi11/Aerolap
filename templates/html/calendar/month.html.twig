@@ -67,11 +67,11 @@
                     <div class="flex items-center gap-2">
                         <span class="text-rose-500 font-bold">💓</span>
                         <h2 class="text-xs font-bold uppercase tracking-wider text-gray-700">
-                            {{ "Monthly Heart Rate Zone Distribution"|trans }}
+                            {{ "Monthly Run Heart Rate Zones"|trans }}
                         </h2>
                     </div>
                     <span class="text-xxs font-medium text-gray-500">
-                        {{ (heartRateZones.totalTimeInSeconds / 3600)|formatNumber(1) }}h ({{ (heartRateZones.totalTimeInSeconds / 60)|formatNumber(0) }}m) tracked with heart rate
+                        {{ (heartRateZones.totalTimeInSeconds / 3600)|formatNumber(1) }}h ({{ (heartRateZones.totalTimeInSeconds / 60)|formatNumber(0) }}m) tracked running time with heart rate
                     </span>
                 </div>
 
@@ -79,27 +79,27 @@
                 <div class="w-full h-4 bg-gray-200 rounded-full overflow-hidden flex shadow-inner"
                      title="Z1: {{ heartRateZones.getPercentageInZoneOne() }}%, Z2: {{ heartRateZones.getPercentageInZoneTwo() }}%, Z3: {{ heartRateZones.getPercentageInZoneThree() }}%, Z4: {{ heartRateZones.getPercentageInZoneFour() }}%, Z5: {{ heartRateZones.getPercentageInZoneFive() }}%">
                     {% if heartRateZones.getPercentageInZoneOne() > 0 %}
-                        <div class="h-full bg-sky-400 flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneOne() }}%">
+                        <div class="h-full bg-[#DF584A] flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneOne() }}%">
                             {% if heartRateZones.getPercentageInZoneOne() >= 7 %}Z1{% endif %}
                         </div>
                     {% endif %}
                     {% if heartRateZones.getPercentageInZoneTwo() > 0 %}
-                        <div class="h-full bg-emerald-500 flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneTwo() }}%">
+                        <div class="h-full bg-[#D63522] flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneTwo() }}%">
                             {% if heartRateZones.getPercentageInZoneTwo() >= 7 %}Z2{% endif %}
                         </div>
                     {% endif %}
                     {% if heartRateZones.getPercentageInZoneThree() > 0 %}
-                        <div class="h-full bg-amber-400 flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneThree() }}%">
+                        <div class="h-full bg-[#BD2D22] flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneThree() }}%">
                             {% if heartRateZones.getPercentageInZoneThree() >= 7 %}Z3{% endif %}
                         </div>
                     {% endif %}
                     {% if heartRateZones.getPercentageInZoneFour() > 0 %}
-                        <div class="h-full bg-orange-500 flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneFour() }}%">
+                        <div class="h-full bg-[#942319] flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneFour() }}%">
                             {% if heartRateZones.getPercentageInZoneFour() >= 7 %}Z4{% endif %}
                         </div>
                     {% endif %}
                     {% if heartRateZones.getPercentageInZoneFive() > 0 %}
-                        <div class="h-full bg-rose-600 flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneFive() }}%">
+                        <div class="h-full bg-[#6A1009] flex items-center justify-center text-white text-xxs font-bold" style="width: {{ heartRateZones.getPercentageInZoneFive() }}%">
                             {% if heartRateZones.getPercentageInZoneFive() >= 7 %}Z5{% endif %}
                         </div>
                     {% endif %}
@@ -107,11 +107,11 @@
 
                 <!-- 5-Zone Cards Breakdown Grid -->
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-xs">
-                    <div class="p-2 bg-white rounded border border-gray-200">
-                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-sky-600">
-                            <span class="size-2 rounded-full bg-sky-400 inline-block"></span> Zone 1
+                    <div class="p-2.5 bg-white rounded border border-gray-200 shadow-2xs">
+                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-gray-700">
+                            <span class="size-2 rounded-full bg-[#DF584A] inline-block"></span> Zone 1
                         </div>
-                        <div class="text-base font-extrabold text-gray-900 mt-0.5">
+                        <div class="text-base font-extrabold mt-0.5" style="color: #DF584A">
                             {{ heartRateZones.getPercentageInZoneOne() }}%
                         </div>
                         <div class="text-xxs text-gray-400">
@@ -119,11 +119,11 @@
                         </div>
                     </div>
 
-                    <div class="p-2 bg-white rounded border border-gray-200">
-                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-emerald-600">
-                            <span class="size-2 rounded-full bg-emerald-500 inline-block"></span> Zone 2
+                    <div class="p-2.5 bg-white rounded border border-gray-200 shadow-2xs">
+                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-gray-700">
+                            <span class="size-2 rounded-full bg-[#D63522] inline-block"></span> Zone 2
                         </div>
-                        <div class="text-base font-extrabold text-gray-900 mt-0.5">
+                        <div class="text-base font-extrabold mt-0.5" style="color: #D63522">
                             {{ heartRateZones.getPercentageInZoneTwo() }}%
                         </div>
                         <div class="text-xxs text-gray-400">
@@ -131,11 +131,11 @@
                         </div>
                     </div>
 
-                    <div class="p-2 bg-white rounded border border-gray-200">
-                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-amber-600">
-                            <span class="size-2 rounded-full bg-amber-400 inline-block"></span> Zone 3
+                    <div class="p-2.5 bg-white rounded border border-gray-200 shadow-2xs">
+                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-gray-700">
+                            <span class="size-2 rounded-full bg-[#BD2D22] inline-block"></span> Zone 3
                         </div>
-                        <div class="text-base font-extrabold text-gray-900 mt-0.5">
+                        <div class="text-base font-extrabold mt-0.5" style="color: #BD2D22">
                             {{ heartRateZones.getPercentageInZoneThree() }}%
                         </div>
                         <div class="text-xxs text-gray-400">
@@ -143,11 +143,11 @@
                         </div>
                     </div>
 
-                    <div class="p-2 bg-white rounded border border-gray-200">
-                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-orange-600">
-                            <span class="size-2 rounded-full bg-orange-500 inline-block"></span> Zone 4
+                    <div class="p-2.5 bg-white rounded border border-gray-200 shadow-2xs">
+                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-gray-700">
+                            <span class="size-2 rounded-full bg-[#942319] inline-block"></span> Zone 4
                         </div>
-                        <div class="text-base font-extrabold text-gray-900 mt-0.5">
+                        <div class="text-base font-extrabold mt-0.5" style="color: #942319">
                             {{ heartRateZones.getPercentageInZoneFour() }}%
                         </div>
                         <div class="text-xxs text-gray-400">
@@ -155,11 +155,11 @@
                         </div>
                     </div>
 
-                    <div class="p-2 bg-white rounded border border-gray-200">
-                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-rose-600">
-                            <span class="size-2 rounded-full bg-rose-600 inline-block"></span> Zone 5
+                    <div class="p-2.5 bg-white rounded border border-gray-200 shadow-2xs">
+                        <div class="flex items-center justify-center gap-1.5 text-xxs font-bold uppercase text-gray-700">
+                            <span class="size-2 rounded-full bg-[#6A1009] inline-block"></span> Zone 5
                         </div>
-                        <div class="text-base font-extrabold text-gray-900 mt-0.5">
+                        <div class="text-base font-extrabold mt-0.5" style="color: #6A1009">
                             {{ heartRateZones.getPercentageInZoneFive() }}%
                         </div>
                         <div class="text-xxs text-gray-400">

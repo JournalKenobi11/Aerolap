@@ -6,6 +6,7 @@ namespace App\Domain\Activity\Stream;
 
 use App\Domain\Activity\ActivityId;
 use App\Domain\Activity\ActivitySummaryRepository;
+use App\Domain\Activity\ActivityType;
 use App\Domain\Activity\SportType\SportType;
 use App\Domain\Activity\Stream\Metric\ActivityStreamMetricRepository;
 use App\Domain\Activity\Stream\Metric\ActivityStreamMetricType;
@@ -100,13 +101,18 @@ final readonly class StreamBasedActivityHeartRateRepository implements ActivityH
         $perMonthAndSportType = [];
 
         foreach ($this->fetchHeartRateDistributions() as $result) {
-            $heartRateDistribution = Json::uncompressAndDecode($result['data']);
-            if ([] === $heartRateDistribution) {
+            $sportType = SportType::tryFrom($result['sportType']);
+            if (!$sportType instanceof SportType) {
                 continue;
             }
 
-            $sportType = SportType::tryFrom($result['sportType']);
-            if (!$sportType instanceof SportType) {
+            // Exclude anything that is not a run (no walks, hikes, or non-running sports)
+            if ($sportType->getActivityType() !== ActivityType::RUN) {
+                continue;
+            }
+
+            $heartRateDistribution = Json::uncompressAndDecode($result['data']);
+            if ([] === $heartRateDistribution) {
                 continue;
             }
 
