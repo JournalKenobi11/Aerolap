@@ -2,7 +2,7 @@
   "config_version": "1.0.0",
   "athlete": {
     "max_hr": 194,
-    "resting_hr": 55,
+    "resting_hr": 48,
     "hr_calc_method": "Heart Rate Reserve (HRR)"
   },
   "windows": {

@@ -51,6 +51,21 @@ final readonly class TrainingStressResult
         public string $guidanceText,
         public array $historyWeeks,
         public array $chartData,
+        public float $acuteIcs = 0.0,
+        public float $chronicBaseIcs = 0.0,
+        public float $cardioAcwr = 1.0,
+        public string $cardioStatus = 'Balanced',
+        public float $acuteStl = 0.0,
+        public float $chronicBaseStl = 0.0,
+        public float $tissueAcwr = 1.0,
+        public string $tissueStatus = 'Steady',
+        public float $divergence = 0.0,
+        public string $divergenceStatus = 'Equilibrium',
+        public string $divergenceLabel = 'Balanced Adaptation',
+        public string $prescriptionTitle = "Today's Guidance",
+        public string $prescriptionText = '',
+        public float $athleteWeightKg = 58.4,
+        public int $targetDistanceMeters = 10000,
     ) {
     }
 
@@ -98,6 +113,21 @@ final readonly class TrainingStressResult
             'guidanceText' => $this->guidanceText,
             'historyWeeks' => $this->historyWeeks,
             'chartData' => $this->chartData,
+            'acuteIcs' => $this->acuteIcs,
+            'chronicBaseIcs' => $this->chronicBaseIcs,
+            'cardioAcwr' => $this->cardioAcwr,
+            'cardioStatus' => $this->cardioStatus,
+            'acuteStl' => $this->acuteStl,
+            'chronicBaseStl' => $this->chronicBaseStl,
+            'tissueAcwr' => $this->tissueAcwr,
+            'tissueStatus' => $this->tissueStatus,
+            'divergence' => $this->divergence,
+            'divergenceStatus' => $this->divergenceStatus,
+            'divergenceLabel' => $this->divergenceLabel,
+            'prescriptionTitle' => $this->prescriptionTitle,
+            'prescriptionText' => $this->prescriptionText,
+            'athleteWeightKg' => $this->athleteWeightKg,
+            'targetDistanceMeters' => $this->targetDistanceMeters,
         ];
     }
 }

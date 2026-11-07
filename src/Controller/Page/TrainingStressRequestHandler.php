@@ -38,12 +38,10 @@ final readonly class TrainingStressRequestHandler
     public function handle(): HtmlResponse
     {
         $todayStr = $this->clock->getCurrentDateTimeImmutable()->format('Y-m-d');
-        $latestSubjective = $this->subjectiveLogRepository->findLatest();
-        $subKey = $latestSubjective ? ($latestSubjective['date'] . '-' . $latestSubjective['sorenessScore']) : 'none';
 
         return $this->pageRenderer->render(
             cacheability: Cacheability::for(
-                cacheKey: 'training-stress-' . $todayStr . '-' . $subKey,
+                cacheKey: 'training-stress-v2-' . $todayStr,
                 cacheTags: CacheTags::of(RootCacheTag::ACTIVITIES),
             ),
             render: fn (): string => $this->renderView(),

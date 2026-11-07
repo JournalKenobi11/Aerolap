@@ -52,7 +52,7 @@ final readonly class TrainingStressConfig
 
     public function getRestingHr(): int
     {
-        return (int) ($this->data['athlete']['resting_hr'] ?? 55);
+        return (int) ($this->data['athlete']['resting_hr'] ?? 48);
     }
 
     public function getHrCalcMethod(): string

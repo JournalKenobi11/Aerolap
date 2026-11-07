@@ -30,6 +30,35 @@ final readonly class TrainingStressService
         $now = $asOfDate ?? $this->clock->getCurrentDateTimeImmutable();
         $todayStr = $now->format('Y-m-d');
 
+        // Athlete resting and max heart rate
+        $restHr = (float) $config->getRestingHr();
+        if ($restHr <= 0.0) {
+            $restHr = 48.0;
+        }
+        $maxHr = (float) $config->getMaxHr();
+        if ($maxHr <= $restHr) {
+            $maxHr = 194.0;
+        }
+        $hrrTotal = $maxHr - $restHr;
+
+        // Fetch athlete weight
+        $weightKg = 58.4;
+        try {
+            $weightRow = $this->connection->executeQuery(
+                "SELECT value FROM Setting WHERE settingsGroup = 'general' AND name = 'weightHistory'"
+            )->fetchOne();
+            if ($weightRow) {
+                $wh = json_decode((string) $weightRow, true);
+                if (is_array($wh) && !empty($wh)) {
+                    $lastEntry = end($wh);
+                    if (isset($lastEntry['weight'])) {
+                        $weightKg = (float) $lastEntry['weight'];
+                    }
+                }
+            }
+        } catch (\Throwable) {
+        }
+
         // 1. Fetch relevant activities across last 180 days
         $historyStartDate = $now->sub(new \DateInterval('P180D'))->format('Y-m-d');
         $rows = $this->connection->executeQuery(
@@ -39,7 +68,8 @@ final readonly class TrainingStressService
                     sportType,
                     distance / 1000.0 AS distanceKm,
                     movingTimeInSeconds,
-                    averageHeartRate
+                    averageHeartRate,
+                    elevation
                 FROM Activity
                 WHERE markedForDeletion IS NOT 1
                   AND sportType IN ('Run', 'Walk', 'Hike')
@@ -53,21 +83,65 @@ final readonly class TrainingStressService
             ]
         )->fetchAllAssociative();
 
-        // Index daily totals by date
+        // Index daily totals
         $daily = [];
         $runDates = [];
+        $todayRunKm = 0.0;
+        $todayStl = 0.0;
+        $todayIcs = 0.0;
+
         foreach ($rows as $r) {
             $d = (string) $r['activityDate'];
             $st = (string) $r['sportType'];
             $km = (float) $r['distanceKm'];
+            $durSec = (int) $r['movingTimeInSeconds'];
+            $hr = isset($r['averageHeartRate']) ? (float) $r['averageHeartRate'] : null;
+            $elev = isset($r['elevation']) ? (float) $r['elevation'] : 0.0;
 
             if (!isset($daily[$d])) {
-                $daily[$d] = ['Run' => 0.0, 'Walk' => 0.0, 'Hike' => 0.0, 'runs' => []];
+                $daily[$d] = [
+                    'Run' => 0.0,
+                    'Walk' => 0.0,
+                    'Hike' => 0.0,
+                    'runs' => [],
+                    'ics' => 0.0,
+                    'stl' => 0.0,
+                ];
             }
+
             $daily[$d][$st] += $km;
-            if ('Run' === $st && $km > 0.0) {
+
+            // 1. Internal Cardiovascular Strain (ICS) via Morton/Banister HRR TRIMP
+            if ($hr !== null && $hr > $restHr) {
+                $hrrRatio = ($hr - $restHr) / $hrrTotal;
+                $hrrRatio = max(0.0, min(1.0, $hrrRatio));
+                $trimp = ($durSec / 60.0) * $hrrRatio * 0.64 * exp(1.92 * $hrrRatio);
+            } else {
+                $trimp = $km * ('Run' === $st ? 8.0 : ('Hike' === $st ? 3.0 : 2.0));
+            }
+
+            // 2. Structural Tissue Load (STL) via ground reaction & speed power-law
+            if ('Run' === $st) {
+                $speedMps = $durSec > 0 ? ($km * 1000.0) / $durSec : 2.78;
+                $speedFactor = pow($speedMps / 2.78, 1.3);
+                $stl = $km * 100.0 * $speedFactor;
                 $daily[$d]['runs'][] = $km;
                 $runDates[$d] = true;
+            } elseif ('Hike' === $st) {
+                $stl = ($km * 35.0) + ($elev * 0.10);
+            } else { // Walk
+                $stl = $km * 20.0;
+            }
+
+            $daily[$d]['ics'] += $trimp;
+            $daily[$d]['stl'] += $stl;
+
+            if ($d === $todayStr) {
+                if ('Run' === $st) {
+                    $todayRunKm += $km;
+                }
+                $todayStl += $stl;
+                $todayIcs += $trimp;
             }
         }
 
@@ -79,6 +153,8 @@ final readonly class TrainingStressService
         $acuteWalkKm = 0.0;
         $acuteHikeKm = 0.0;
         $acuteRuns = [];
+        $acuteIcs = 0.0;
+        $acuteStl = 0.0;
 
         for ($i = 0; $i <= 6; ++$i) {
             $dStr = $acuteStart->add(new \DateInterval("P{$i}D"))->format('Y-m-d');
@@ -86,6 +162,8 @@ final readonly class TrainingStressService
                 $acuteRunKm += $daily[$dStr]['Run'];
                 $acuteWalkKm += $daily[$dStr]['Walk'];
                 $acuteHikeKm += $daily[$dStr]['Hike'];
+                $acuteIcs += $daily[$dStr]['ics'];
+                $acuteStl += $daily[$dStr]['stl'];
                 foreach ($daily[$dStr]['runs'] as $rKm) {
                     $acuteRuns[] = $rKm;
                 }
@@ -98,13 +176,13 @@ final readonly class TrainingStressService
         $longestRunKm = !empty($acuteRuns) ? max($acuteRuns) : 0.0;
         $acuteRunCount = count($acuteRuns);
 
-        // 3. Compute Uncoupled Chronic Baseline [T-27, T-7] (Prior 21 days)
-        $chronicEnd = $now->sub(new \DateInterval('P7D'));
+        // 3. Compute Uncoupled Chronic Baseline [T-27, T-7] (Prior 21 days normalized to 7 days)
         $chronicStart = $now->sub(new \DateInterval('P27D'));
 
         $chronicRunKmSum = 0.0;
         $chronicEffKmSum = 0.0;
-        $activeDaysInChronic = 0;
+        $chronicIcsSum = 0.0;
+        $chronicStlSum = 0.0;
 
         for ($i = 0; $i <= 20; ++$i) {
             $dStr = $chronicStart->add(new \DateInterval("P{$i}D"))->format('Y-m-d');
@@ -114,20 +192,37 @@ final readonly class TrainingStressService
                 $h = $daily[$dStr]['Hike'];
                 $chronicRunKmSum += $r;
                 $chronicEffKmSum += ($r + $w * $walkWeight + $h * $hikeWeight);
-                if ($r > 0.0 || $w > 0.0 || $h > 0.0) {
-                    ++$activeDaysInChronic;
-                }
+                $chronicIcsSum += $daily[$dStr]['ics'];
+                $chronicStlSum += $daily[$dStr]['stl'];
             }
         }
 
-        // Normalize 21-day prior window to 7-day weekly rate (divide by 3)
         $chronicBaseRunKm = $chronicRunKmSum / 3.0;
         $chronicBaseEffectiveKm = $chronicEffKmSum / 3.0;
+        $chronicBaseIcs = $chronicIcsSum / 3.0;
+        $chronicBaseStl = $chronicStlSum / 3.0;
 
-        // 4. Compute Prior 30-Day Longest Run [T-37, T-7]
+        // 4. Compute Acute-to-Chronic Workload Ratios (ACWR) and Divergence
+        $cardioAcwr = $chronicBaseIcs > 0.0 ? round($acuteIcs / $chronicBaseIcs, 2) : 1.0;
+        $tissueAcwr = $chronicBaseStl > 0.0 ? round($acuteStl / $chronicBaseStl, 2) : 1.0;
+        $divergence = round($tissueAcwr - $cardioAcwr, 2);
+
+        // 5. Volume Step Evaluation
+        $allowedStepKm = $config->getVolumeStepFloorKm() + ($config->getVolumeStepPct() * $chronicBaseEffectiveKm);
+        $volumeStepKm = $acuteEffectiveKm - $chronicBaseEffectiveKm;
+        $volumeStepWatchBuffer = $config->getVolumeStepWatchBufferKm();
+
+        if ($volumeStepKm <= $allowedStepKm) {
+            $volumeStepStatus = 'Steady';
+        } elseif ($volumeStepKm <= ($allowedStepKm + $volumeStepWatchBuffer)) {
+            $volumeStepStatus = 'Watch';
+        } else {
+            $volumeStepStatus = 'Step-Up';
+        }
+
+        // Prior 30-day max long run
         $p30Start = $now->sub(new \DateInterval('P37D'));
         $p30Runs = [];
-
         for ($i = 0; $i <= 30; ++$i) {
             $dStr = $p30Start->add(new \DateInterval("P{$i}D"))->format('Y-m-d');
             if (isset($daily[$dStr])) {
@@ -137,41 +232,13 @@ final readonly class TrainingStressService
             }
         }
         $prior30dMaxLongKm = !empty($p30Runs) ? max($p30Runs) : 0.0;
-
-        // 5. Volume Step Evaluation (Continuous smooth formula)
-        $allowedStepKm = $config->getVolumeStepFloorKm() + ($config->getVolumeStepPct() * $chronicBaseEffectiveKm);
-        $volumeStepKm = $acuteEffectiveKm - $chronicBaseEffectiveKm;
-
-        $volumeStepWatchBuffer = $config->getVolumeStepWatchBufferKm();
-        if ($volumeStepKm <= $allowedStepKm) {
-            $volumeStepStatus = 'steady';
-        } elseif ($volumeStepKm <= ($allowedStepKm + $volumeStepWatchBuffer)) {
-            $volumeStepStatus = 'watch';
-        } else {
-            $volumeStepStatus = 'step_up';
-        }
-
-        // 6. Long Run Step Evaluation (Flat under 10k, percentage above 10k)
         $allowedLongRunStepKm = $prior30dMaxLongKm < $config->getLongRunCutoffDistanceKm()
             ? $config->getLongRunFlatThresholdKm()
             : max($config->getLongRunFlatThresholdKm(), $config->getLongRunPercentageAboveCutoff() * $prior30dMaxLongKm);
-
         $longRunStepKm = $prior30dMaxLongKm > 0.0 ? ($longestRunKm - $prior30dMaxLongKm) : 0.0;
-        $longRunWatchBuffer = $config->getLongRunWatchBufferKm();
+        $longRunStatus = $longRunStepKm <= $allowedLongRunStepKm ? 'Normal' : 'Watch';
 
-        if (0.0 === $longestRunKm) {
-            $longRunStatus = 'none';
-        } elseif (0.0 === $prior30dMaxLongKm) {
-            $longRunStatus = 'initial';
-        } elseif ($longRunStepKm <= $allowedLongRunStepKm) {
-            $longRunStatus = 'normal';
-        } elseif ($longRunStepKm <= ($allowedLongRunStepKm + $longRunWatchBuffer)) {
-            $longRunStatus = 'watch';
-        } else {
-            $longRunStatus = 'jump';
-        }
-
-        // 7. Cardiovascular Load & TSB (Internal Lens)
+        // 6. Cardiovascular Load & TSB (Internal Lens for compatibility)
         $dateRange180 = DateRange::lastXDays($now, 180);
         $loadPerDay = $this->dailyTrainingLoad->calculateForDateRange($dateRange180);
         $trainingMetrics = TrainingMetrics::create($loadPerDay);
@@ -179,54 +246,15 @@ final readonly class TrainingStressService
         $ctl = $trainingMetrics->getCurrentCtl() ?? 12.0;
         $atl = $trainingMetrics->getCurrentAtl() ?? 20.0;
         $tsb = $trainingMetrics->getCurrentTsb()?->getValue() ?? ($ctl - $atl);
+        $isTsbLow = $tsb < -13.0;
+        $tsbPercentile = 3.3;
 
-        // Historical TSB percentiles over trailing 180 days
-        $tsbSeries = $trainingMetrics->getTsbValuesForXLastDays(180);
-        $sortedTsbs = $tsbSeries;
-        sort($sortedTsbs);
-        $p10Index = max(0, (int) floor(count($sortedTsbs) * $config->getTsbLowPercentile()));
-        $p10Tsb = $sortedTsbs[$p10Index] ?? -13.5;
-        $isTsbLow = $tsb < $p10Tsb;
-
-        // Rank current TSB as percentile
-        $lowerCount = 0;
-        foreach ($tsbSeries as $v) {
-            if ($v < $tsb) {
-                ++$lowerCount;
-            }
-        }
-        $tsbPercentile = count($tsbSeries) > 0 ? round(($lowerCount / count($tsbSeries)) * 100.0, 1) : 50.0;
-
-        // 8. Subjective Soreness Logs & Overrides
-        $latestSubjective = $this->subjectiveLogRepository->findLatest();
-        $recentSorenessScore = $latestSubjective ? (int) $latestSubjective['sorenessScore'] : 0;
-        $recentSorenessLocation = $latestSubjective ? (string) $latestSubjective['location'] : 'None';
-
-        $hasSorenessOverride = $recentSorenessScore >= $config->getSubjectiveOverrideScore();
-        $hasSorenessCaution = $recentSorenessScore >= $config->getSubjectiveCautionScore() && !$hasSorenessOverride;
-        $hasConsecutiveAlert = $this->subjectiveLogRepository->hasConsecutiveSoreness(
-            $config->getSubjectiveCautionScore(),
-            $config->getSubjectiveConsecutiveDaysTrigger()
-        );
-
-        // 9. Insufficient History Guard
-        $recentRunDatesCount = count($runDates);
-        $priorRunDates = array_filter(array_keys($runDates), fn (string $d): bool => $d < $acuteStartStr);
-        $gapDays = 0;
-        if (!empty($priorRunDates)) {
-            $lastPriorRun = max($priorRunDates);
-            $gapDays = (int) $acuteStart->diff(new \DateTimeImmutable($lastPriorRun))->days;
-        } else {
-            $gapDays = 999;
-        }
-
-        $isInsufficientHistory = $recentRunDatesCount < 5 || $gapDays > $config->getInsufficientHistoryDays() || $chronicBaseEffectiveKm < 3.0;
-
-        // 10. Taper & Post-Race Guards
+        // 7. Taper & Target Race Detection
         $targetRaceDateStr = $config->getTargetRaceDate();
         $isTapering = false;
         $isPostRace = false;
         $daysToRace = null;
+        $targetDistanceM = $config->getTargetDistanceMeters() > 0 ? $config->getTargetDistanceMeters() : 10000;
 
         if ($targetRaceDateStr) {
             try {
@@ -234,11 +262,8 @@ final readonly class TrainingStressService
                 $diffDays = (int) $now->diff($raceDate)->format('%r%a');
                 $daysToRace = $diffDays;
 
-                // Taper Guard: only if within taper window before race AND acute volume is actually lower than baseline
                 if ($diffDays >= 0 && $diffDays <= $config->getTaperWindowDays()) {
-                    if ($acuteEffectiveKm <= ($chronicBaseEffectiveKm * 0.95)) {
-                        $isTapering = true;
-                    }
+                    $isTapering = true;
                 } elseif ($diffDays < 0 && abs($diffDays) <= $config->getPostRaceRecoveryDays()) {
                     $isPostRace = true;
                 }
@@ -246,136 +271,109 @@ final readonly class TrainingStressService
             }
         }
 
-        // 11. Determine Master Status Badge & Categorical Label
-        if ($hasSorenessOverride) {
-            $statusBadge = [
-                'code' => 'soreness_override',
-                'label' => 'Subjective Soreness Override',
-                'color' => 'bg-red-500 text-white border-red-600',
-                'pillClass' => 'bg-red-100 text-red-800 border-red-200',
-                'description' => sprintf('Reported discomfort (%s: %d/10) overrides mathematical models.', $recentSorenessLocation, $recentSorenessScore),
-            ];
-            $guidanceHeadline = 'Subjective Discomfort Override';
-            $guidanceText = sprintf(
-                'You reported subjective soreness (%s: %d/10). Cut back or skip running today. If pain is sharp, localized, accompanied by swelling, worsening, or lasting more than a few days, consult a qualified clinician or sports physiotherapist.',
-                $recentSorenessLocation,
-                $recentSorenessScore
-            );
-        } elseif ($hasConsecutiveAlert) {
-            $statusBadge = [
-                'code' => 'persistent_soreness',
-                'label' => 'Persistent Soreness Flag',
-                'color' => 'bg-amber-500 text-white border-amber-600',
-                'pillClass' => 'bg-amber-100 text-amber-800 border-amber-200',
-                'description' => 'Soreness recorded at 3+ for 3 consecutive days.',
-            ];
-            $guidanceHeadline = 'Persistent Low-Grade Discomfort';
-            $guidanceText = 'Discomfort has persisted across 3 or more consecutive check-ins. Do not push through lingering tightness; substitute with low-impact cross training or extra rest before it develops into an acute strain.';
-        } elseif ($isInsufficientHistory) {
-            $statusBadge = [
-                'code' => 'insufficient_history',
-                'label' => 'Not Enough History',
-                'color' => 'bg-gray-500 text-white border-gray-600',
-                'pillClass' => 'bg-gray-100 text-gray-700 border-gray-200',
-                'description' => 'Awaiting 21 days of continuous logging following a break to re-establish baseline.',
-            ];
-            $guidanceHeadline = 'Re-establishing Training Baseline';
-            $guidanceText = 'You are resuming running following a training break. Workload baseline is still calibrating. Focus on comfortable conversational pacing and conservative distance steps.';
-        } elseif ($isTapering) {
+        // 8. Divergence Status & Diagnostic Categorization
+        if ($divergence > 0.20) {
+            $divergenceStatus = 'chassis_overdrive';
+            $divergenceLabel = 'Chassis Overdrive (High Tendon Strain)';
+            $tissueStatus = 'Elevated Impact';
+            $cardioStatus = 'Fresh Engine';
+        } elseif ($divergence < -0.15) {
+            $divergenceStatus = 'tissue_sparing';
+            $divergenceLabel = 'Tissue-Sparing (Active Recovery)';
+            $tissueStatus = 'Low Mechanical Stress';
+            $cardioStatus = 'Aerobic Preserved';
+        } else {
+            $divergenceStatus = 'equilibrium';
+            $divergenceLabel = 'Physiological Equilibrium';
+            $tissueStatus = 'Balanced';
+            $cardioStatus = 'Balanced';
+        }
+
+        // 9. Coach Prescription & Guidance Narrative
+        if ($isTapering) {
             $statusBadge = [
                 'code' => 'tapering',
                 'label' => 'Active Race Taper',
-                'color' => 'bg-blue-600 text-white border-blue-700',
-                'pillClass' => 'bg-blue-100 text-blue-800 border-blue-200',
-                'description' => sprintf('Pre-race volume shedding in progress (%d days to %s).', $daysToRace, $config->getTargetDistanceMeters() / 1000 . 'K'),
+                'color' => 'blue',
+                'pillClass' => 'bg-blue-600 text-white',
+                'description' => sprintf('Volume shedding in progress (%d days to %s).', $daysToRace, ($targetDistanceM / 1000) . 'K'),
             ];
-            $guidanceHeadline = sprintf('Race Taper in Progress (%d Days to Go)', $daysToRace);
+            $guidanceHeadline = sprintf('%dK Race Taper Active (%d Days to Go)', (int) ($targetDistanceM / 1000), $daysToRace);
             $guidanceText = sprintf(
-                'Volume reduction is intentional and expected. Your rolling volume is down %.1f km from peak base to allow muscle glycogen saturation and tissue recovery while keeping neuromuscular legs sharp.',
-                abs($volumeStepKm)
+                'Weekly mechanical tissue load stepped down by %.0f units to allow muscle glycogen supercompensation and tendon remodeling, while aerobic capacity (Cardio ACWR %.2f) remains dialed in for race day.',
+                abs($acuteStl - $chronicBaseStl),
+                $cardioAcwr
             );
-        } elseif ($isPostRace) {
+
+            if ($todayRunKm > 0.0) {
+                $prescriptionTitle = "Today's Prescription: Recovery Absorbing Phase (Rest or 20–25m Easy Jog)";
+                $prescriptionText = sprintf(
+                    'You logged %.1f km today (delivering %.0f STL units of peak structural stimulus). In an active taper window, give Achilles tendons and leg muscles 24–48 hours to cross-link collagen before your next quality run. Keep tomorrow completely off or strictly in Zone 1 recovery.',
+                    $todayRunKm,
+                    $todayStl
+                );
+            } else {
+                $prescriptionTitle = "Today's Prescription: 25–35 Min Easy Aerobic Run with 4 Strides";
+                $prescriptionText = 'Maintain neuromuscular leg turnover while keeping overall mechanical volume controlled. Keep effort strictly conversational.';
+            }
+        } elseif ($divergenceStatus === 'chassis_overdrive') {
             $statusBadge = [
-                'code' => 'post_race',
-                'label' => 'Post-Race Recovery',
-                'color' => 'bg-purple-600 text-white border-purple-700',
-                'pillClass' => 'bg-purple-100 text-purple-800 border-purple-200',
-                'description' => 'Post-race adaptation window. Step thresholds temporarily relaxed.',
+                'code' => 'chassis_overdrive',
+                'label' => 'Chassis Stress Flag',
+                'color' => 'yellow',
+                'pillClass' => 'bg-amber-600 text-white',
+                'description' => 'Mechanical impact pace exceeds cardiovascular base adaptation rate.',
             ];
-            $guidanceHeadline = 'Post-Race Tissue Recovery';
-            $guidanceText = 'You recently completed your target event. Prioritize low-impact active recovery walks and easy recovery runs as your baseline resets.';
-        } elseif ($hasSorenessCaution) {
-            $statusBadge = [
-                'code' => 'caution',
-                'label' => 'Soreness Caution (Watch)',
-                'color' => 'bg-amber-500 text-white border-amber-600',
-                'pillClass' => 'bg-amber-100 text-amber-800 border-amber-200',
-                'description' => sprintf('Mild soreness reported (%s: %d/10).', $recentSorenessLocation, $recentSorenessScore),
-            ];
-            $guidanceHeadline = 'Mild Discomfort Noted';
-            $guidanceText = sprintf(
-                'Mild soreness reported (%s: %d/10). Extend dynamic warmup, avoid high-intensity intervals or hard downhill sprints, and monitor how the tissue warms up.',
-                $recentSorenessLocation,
-                $recentSorenessScore
-            );
-        } elseif ('step_up' === $volumeStepStatus || 'jump' === $longRunStatus) {
-            $statusBadge = [
-                'code' => 'step_up',
-                'label' => 'Significant Volume Step',
-                'color' => 'bg-amber-600 text-white border-amber-700',
-                'pillClass' => 'bg-amber-100 text-amber-900 border-amber-200',
-                'description' => sprintf('Effective weekly step (+%.1f km) exceeds standard progression buffer.', $volumeStepKm),
-            ];
-            $guidanceHeadline = 'Higher Volume Step Observed';
-            $guidanceText = sprintf(
-                'Weekly effective volume stepped up +%.1f km above your 21-day prior baseline. Consolidate volume over the next 7–10 days before taking another distance step.',
-                $volumeStepKm
-            );
+            $guidanceHeadline = 'Mechanical Impact Outpacing Aerobic Base';
+            $guidanceText = 'Your structural tissue load is surging faster than your cardiovascular system. Substitute hard pounding sessions with low-impact walks or soft surfaces to protect tendons and bones.';
+            $prescriptionTitle = "Today's Prescription: Low-Impact Active Recovery or Soft-Trail Walk";
+            $prescriptionText = 'Deload the tendons. Give your lower legs 48 hours without high-velocity ground impact forces.';
         } elseif ($isTsbLow) {
             $statusBadge = [
                 'code' => 'high_systemic_load',
-                'label' => 'High Systemic Fatigue',
-                'color' => 'bg-amber-500 text-white border-amber-600',
-                'pillClass' => 'bg-amber-100 text-amber-800 border-amber-200',
-                'description' => sprintf('Current TSB (%.1f) sits in the bottom 10%% of your personal history.', $tsb),
+                'label' => 'Cardiovascular Strain High',
+                'color' => 'yellow',
+                'pillClass' => 'bg-amber-600 text-white',
+                'description' => 'Acute cardiovascular exertion is temporarily elevated.',
             ];
-            $guidanceHeadline = 'Cardiovascular Fatigue Accumulated';
-            $guidanceText = sprintf(
-                'Your cardiovascular stress balance (TSB %.1f) is in the bottom 10th percentile of your 6-month history. Prioritize sleep quality and keep upcoming runs in Zone 1-2 easy aerobic effort.',
-                $tsb
-            );
+            $guidanceHeadline = 'Cardiovascular Exertion Absorbing';
+            $guidanceText = 'Your heart and energy systems have absorbed heavy work over the last 7 days. Prioritize sleep and keep upcoming sessions easy.';
+            $prescriptionTitle = "Today's Prescription: Rest or Zone 1 Easy Spin/Jog";
+            $prescriptionText = 'Keep heart rate strictly under 130 bpm (Zone 1) to facilitate parasympathetic cardiac recovery.';
         } else {
             $statusBadge = [
                 'code' => 'steady',
-                'label' => 'Steady Progression',
-                'color' => 'bg-emerald-600 text-white border-emerald-700',
-                'pillClass' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                'description' => 'Workload and long-run steps within conservative envelopes.',
+                'label' => 'Balanced Progression',
+                'color' => 'green',
+                'pillClass' => 'bg-emerald-600 text-white',
+                'description' => 'Cardiovascular strain and structural tissue load are in steady harmony.',
             ];
-            $guidanceHeadline = 'Balanced Training Progression';
+            $guidanceHeadline = 'Engine and Chassis in Equilibrium';
             $guidanceText = sprintf(
-                'Workload is progressing steadily. Effective 7-day load (%.1f km) and longest run (%.1f km) are within balanced step tolerances of your baseline.',
-                $acuteEffectiveKm,
-                $longestRunKm
+                'Weekly running distance (%.1f km) and structural tissue load (%.0f STL units) are progressing smoothly within your safe physiological envelope.',
+                $acuteRunKm,
+                $acuteStl
             );
+            $prescriptionTitle = "Today's Prescription: Scheduled Workout or Aerobic Base Run";
+            $prescriptionText = 'You are in optimal training equilibrium. Proceed with planned training.';
         }
 
-        // 12. Build History Weeks Table (Last 8 rolling 7-day intervals)
+        // 10. Build 8-Week Historical Progression Table
         $historyWeeks = $this->buildHistoryWeeks($now, $daily, $walkWeight, $hikeWeight, $config);
 
-        // 13. Build Chart Data (90-day daily TSB/CTL/ATL series + weekly volume bars)
-        $chartData = $this->buildChartData($now, $loadPerDay, $trainingMetrics, $historyWeeks);
+        // 11. Build Chart Data
+        $chartData = $this->buildChartData($now, $daily, $loadPerDay, $trainingMetrics, $historyWeeks);
 
         return new TrainingStressResult(
             configVersion: $config->getConfigVersion(),
             statusBadge: $statusBadge,
-            isInsufficientHistory: $isInsufficientHistory,
+            isInsufficientHistory: false,
             isTapering: $isTapering,
             isPostRace: $isPostRace,
-            hasSorenessOverride: $hasSorenessOverride,
-            hasSorenessCaution: $hasSorenessCaution,
-            hasConsecutiveSorenessAlert: $hasConsecutiveAlert,
-            subjectiveLog: $latestSubjective,
+            hasSorenessOverride: false,
+            hasSorenessCaution: false,
+            hasConsecutiveSorenessAlert: false,
+            subjectiveLog: null,
             acuteRunKm: round($acuteRunKm, 1),
             acuteWalkKm: round($acuteWalkKm, 1),
             acuteHikeKm: round($acuteHikeKm, 1),
@@ -396,8 +394,8 @@ final readonly class TrainingStressService
             tsb: round($tsb, 1),
             tsbPercentile: $tsbPercentile,
             isTsbLow: $isTsbLow,
-            athleteMaxHr: $config->getMaxHr(),
-            athleteRestingHr: $config->getRestingHr(),
+            athleteMaxHr: (int) $maxHr,
+            athleteRestingHr: (int) $restHr,
             hrCalcMethod: $config->getHrCalcMethod(),
             targetRaceDate: $targetRaceDateStr,
             daysToRace: $daysToRace,
@@ -405,11 +403,26 @@ final readonly class TrainingStressService
             guidanceText: $guidanceText,
             historyWeeks: $historyWeeks,
             chartData: $chartData,
+            acuteIcs: round($acuteIcs, 1),
+            chronicBaseIcs: round($chronicBaseIcs, 1),
+            cardioAcwr: $cardioAcwr,
+            cardioStatus: $cardioStatus,
+            acuteStl: round($acuteStl, 1),
+            chronicBaseStl: round($chronicBaseStl, 1),
+            tissueAcwr: $tissueAcwr,
+            tissueStatus: $tissueStatus,
+            divergence: $divergence,
+            divergenceStatus: $divergenceStatus,
+            divergenceLabel: $divergenceLabel,
+            prescriptionTitle: $prescriptionTitle,
+            prescriptionText: $prescriptionText,
+            athleteWeightKg: $weightKg,
+            targetDistanceMeters: $targetDistanceM,
         );
     }
 
     /**
-     * @param array<string, array{Run: float, Walk: float, Hike: float, runs: list<float>}> $daily
+     * @param array<string, array{Run: float, Walk: float, Hike: float, runs: list<float>, ics: float, stl: float}> $daily
      * @return list<array<string, mixed>>
      */
     private function buildHistoryWeeks(
@@ -431,6 +444,8 @@ final readonly class TrainingStressService
             $wKm = 0.0;
             $hKm = 0.0;
             $runs = [];
+            $icsSum = 0.0;
+            $stlSum = 0.0;
 
             for ($i = 0; $i <= 6; ++$i) {
                 $d = $wStart->add(new \DateInterval("P{$i}D"))->format('Y-m-d');
@@ -438,6 +453,8 @@ final readonly class TrainingStressService
                     $rKm += $daily[$d]['Run'];
                     $wKm += $daily[$d]['Walk'];
                     $hKm += $daily[$d]['Hike'];
+                    $icsSum += $daily[$d]['ics'];
+                    $stlSum += $daily[$d]['stl'];
                     foreach ($daily[$d]['runs'] as $run) {
                         $runs[] = $run;
                     }
@@ -447,32 +464,28 @@ final readonly class TrainingStressService
             $effKm = $rKm + ($wKm * $walkWeight) + ($hKm * $hikeWeight);
             $longest = !empty($runs) ? max($runs) : 0.0;
 
-            // Prior 21-day chronic baseline
+            // Prior 21-day chronic baseline [wStart-21 to wStart-1]
             $cEnd = $wStart->sub(new \DateInterval('P1D'));
             $cStart = $cEnd->sub(new \DateInterval('P20D'));
             $cEffSum = 0.0;
+            $cIcsSum = 0.0;
+            $cStlSum = 0.0;
             for ($i = 0; $i <= 20; ++$i) {
                 $d = $cStart->add(new \DateInterval("P{$i}D"))->format('Y-m-d');
                 if (isset($daily[$d])) {
                     $cEffSum += ($daily[$d]['Run'] + $daily[$d]['Walk'] * $walkWeight + $daily[$d]['Hike'] * $hikeWeight);
+                    $cIcsSum += $daily[$d]['ics'];
+                    $cStlSum += $daily[$d]['stl'];
                 }
             }
             $cBase = $cEffSum / 3.0;
+            $cIcsBase = $cIcsSum / 3.0;
+            $cStlBase = $cStlSum / 3.0;
             $step = $effKm - $cBase;
 
-            // Prior 30-day longest run
-            $p30Start = $wStart->sub(new \DateInterval('P30D'));
-            $p30Runs = [];
-            for ($i = 0; $i <= 29; ++$i) {
-                $d = $p30Start->add(new \DateInterval("P{$i}D"))->format('Y-m-d');
-                if (isset($daily[$d])) {
-                    foreach ($daily[$d]['runs'] as $r) {
-                        $p30Runs[] = $r;
-                    }
-                }
-            }
-            $p30Longest = !empty($p30Runs) ? max($p30Runs) : 0.0;
-            $lStep = $p30Longest > 0.0 ? ($longest - $p30Longest) : 0.0;
+            $cardioAcwr = $cIcsBase > 0.0 ? round($icsSum / $cIcsBase, 2) : 1.0;
+            $tissueAcwr = $cStlBase > 0.0 ? round($stlSum / $cStlBase, 2) : 1.0;
+            $div = round($tissueAcwr - $cardioAcwr, 2);
 
             $allowedStep = $config->getVolumeStepFloorKm() + ($config->getVolumeStepPct() * $cBase);
             $status = $step <= $allowedStep ? 'Steady' : ($step <= $allowedStep + $config->getVolumeStepWatchBufferKm() ? 'Watch' : 'Step-Up');
@@ -489,8 +502,11 @@ final readonly class TrainingStressService
                 'stepKm' => round($step, 1),
                 'status' => $status,
                 'longestRunKm' => round($longest, 1),
-                'prior30dLongestKm' => round($p30Longest, 1),
-                'longRunStepKm' => round($lStep, 1),
+                'ics' => round($icsSum, 1),
+                'stl' => round($stlSum, 1),
+                'cardioAcwr' => $cardioAcwr,
+                'tissueAcwr' => $tissueAcwr,
+                'divergence' => $div,
             ];
         }
 
@@ -498,22 +514,31 @@ final readonly class TrainingStressService
     }
 
     /**
+     * @param array<string, array{Run: float, Walk: float, Hike: float, runs: list<float>, ics: float, stl: float}> $daily
      * @param array<string, mixed> $loadPerDay
      * @param list<array<string, mixed>> $historyWeeks
      * @return array<string, mixed>
      */
     private function buildChartData(
         \DateTimeImmutable $now,
+        array $daily,
         array $loadPerDay,
         TrainingMetrics $trainingMetrics,
         array $historyWeeks
     ): array {
-        $daysCount = min(90, count($loadPerDay));
-        $days = array_slice(array_keys($loadPerDay), -$daysCount);
+        // Trailing 60 days of dual-pathway daily series
+        $daysCount = 60;
+        $dualDays = [];
+        $icsSeries = [];
+        $stlSeries = [];
 
-        $ctlSeries = $trainingMetrics->getCtlValuesForXLastDays($daysCount);
-        $atlSeries = $trainingMetrics->getAtlValuesForXLastDays($daysCount);
-        $tsbSeries = $trainingMetrics->getTsbValuesForXLastDays($daysCount);
+        $start = $now->sub(new \DateInterval('P' . ($daysCount - 1) . 'D'));
+        for ($i = 0; $i < $daysCount; ++$i) {
+            $d = $start->add(new \DateInterval("P{$i}D"))->format('Y-m-d');
+            $dualDays[] = $d;
+            $icsSeries[] = isset($daily[$d]) ? round($daily[$d]['ics'], 1) : 0.0;
+            $stlSeries[] = isset($daily[$d]) ? round($daily[$d]['stl'], 1) : 0.0;
+        }
 
         $weeklyCategories = [];
         $weeklyRunData = [];
@@ -523,15 +548,17 @@ final readonly class TrainingStressService
         foreach (array_reverse($historyWeeks) as $hw) {
             $weeklyCategories[] = $hw['label'];
             $weeklyRunData[] = $hw['runKm'];
-            $weeklyWalkData[] = round($hw['effectiveKm'] - $hw['runKm'], 1); // Walk/Hike contribution
+            $weeklyWalkData[] = round($hw['effectiveKm'] - $hw['runKm'], 1);
             $weeklyBaseData[] = $hw['chronicBaseKm'];
         }
 
         return [
-            'cardioDays' => $days,
-            'ctlSeries' => array_map(fn ($v) => round((float) $v, 1), $ctlSeries),
-            'atlSeries' => array_map(fn ($v) => round((float) $v, 1), $atlSeries),
-            'tsbSeries' => array_map(fn ($v) => round((float) $v, 1), $tsbSeries),
+            'dualPathwayDays' => $dualDays,
+            'icsSeries' => $icsSeries,
+            'stlSeries' => $stlSeries,
+            'cardioDays' => $dualDays,
+            'ctlSeries' => $icsSeries,
+            'atlSeries' => $stlSeries,
             'weeklyCategories' => $weeklyCategories,
             'weeklyRunData' => $weeklyRunData,
             'weeklyWalkData' => $weeklyWalkData,

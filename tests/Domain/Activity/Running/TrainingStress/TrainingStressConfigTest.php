@@ -14,7 +14,7 @@ final class TrainingStressConfigTest extends TestCase
         $config = TrainingStressConfig::fromArray([
             'config_version' => '1.0.0',
             'athlete' => [
-                'resting_hr' => 55,
+                'resting_hr' => 48,
                 'max_hr' => 194,
                 'hr_calc_method' => 'Heart Rate Reserve (HRR)',
             ],
@@ -58,7 +58,7 @@ final class TrainingStressConfigTest extends TestCase
         ]);
 
         $this->assertSame('1.0.0', $config->getConfigVersion());
-        $this->assertSame(55, $config->getRestingHr());
+        $this->assertSame(48, $config->getRestingHr());
         $this->assertSame(194, $config->getMaxHr());
         $this->assertSame('Heart Rate Reserve (HRR)', $config->getHrCalcMethod());
 
@@ -100,7 +100,7 @@ final class TrainingStressConfigTest extends TestCase
 
         $config = TrainingStressConfig::loadFromFile($configFile);
         $this->assertSame('1.0.0', $config->getConfigVersion());
-        $this->assertSame(55, $config->getRestingHr());
+        $this->assertSame(48, $config->getRestingHr());
         $this->assertSame(194, $config->getMaxHr());
         $this->assertSame('2026-11-22', $config->getTargetRaceDate());
         $this->assertSame(2.5, $config->getVolumeStepFloorKm());
