@@ -9,7 +9,7 @@ use App\Infrastructure\Config\Leaflet\LeafletConfig;
 
 final readonly class MapsSettings
 {
-    public const string DEFAULT_POLYLINE_COLOR = '#fc6719';
+    public const string DEFAULT_POLYLINE_COLOR = '#2DB6FA';
     public const string DEFAULT_TILE_LAYER_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
     public const int DEFAULT_HEATMAP_INITIAL_ZOOM = 12;
 

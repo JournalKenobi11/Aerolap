@@ -10,6 +10,7 @@ use App\Console\Import\RunFileImportConsoleCommand;
 use App\Console\Strava\ProcessStravaWebhooksConsoleCommand;
 use App\Domain\Import\ImportMode;
 use App\Domain\Settings\SettingsRepository;
+use App\Domain\Import\WatchDirectory;
 use App\Infrastructure\Console\ConsoleOutputAware;
 use App\Infrastructure\Daemon\Cron\CronAction;
 use App\Infrastructure\Daemon\Cron\CronProcess;
@@ -17,6 +18,7 @@ use App\Infrastructure\Mutex\LockName;
 use App\Infrastructure\Mutex\Mutex;
 use App\Infrastructure\Time\Clock\Clock;
 use Doctrine\DBAL\Connection;
+use React\ChildProcess\Process;
 use React\EventLoop\Loop;
 use React\Promise\PromiseInterface;
 use WyriHaximus\React\Cron\Action;
@@ -95,7 +97,30 @@ final class SystemDaemon implements Daemon
         $extraConfiguredCronActionsOutput = [];
 
         if ($this->importMode->isFiles()) {
-            $extraConfiguredCronActionsOutput[] = sprintf('<info> - runFileImport: %s</info>', self::CRON_EVERY_5_MINUTES);
+            $isImporting = false;
+            Loop::addPeriodicTimer(1.0, function () use (&$isImporting): void {
+                if ($isImporting) {
+                    return;
+                }
+                $files = glob('/var/www/watch/*.{gpx,fit,tcx,zip,csv,json}', GLOB_BRACE);
+                if (empty($files)) {
+                    return;
+                }
+                $isImporting = true;
+                $process = new Process(sprintf('bin/console %s', RunFileImportConsoleCommand::NAME));
+                $process->start();
+                $process->stdout?->on('data', function (string $chunk): void {
+                    $this->getConsoleOutput()->write($chunk);
+                });
+                $process->stderr?->on('data', function (string $chunk): void {
+                    $this->getConsoleOutput()->write(sprintf('<error>%s</error>', $chunk));
+                });
+                $process->on('exit', function () use (&$isImporting): void {
+                    $isImporting = false;
+                });
+            });
+
+            $extraConfiguredCronActionsOutput[] = sprintf('<info> - runFileImport: %s (instant 1s watcher active)</info>', self::CRON_EVERY_5_MINUTES);
             $actions[] = new Action(
                 key: 'runFileImport',
                 mutexTtl: 300,

@@ -43,7 +43,7 @@ final readonly class EddingtonChart
         $timesCompletedDataForChart[$eddingtonNumber] = [
             'value' => $timesCompletedData[$eddingtonNumber],
             'itemStyle' => [
-                'color' => 'rgba(227, 73, 2, 0.8)',
+                'color' => 'rgba(45, 182, 250, 0.8)',
             ],
         ];
 
@@ -119,7 +119,7 @@ final readonly class EddingtonChart
                     ],
                     'showBackground' => false,
                     'itemStyle' => [
-                        'color' => 'rgba(227, 73, 2, 0.3)',
+                        'color' => 'rgba(45, 182, 250, 0.3)',
                     ],
                     'markPoint' => [
                         'symbol' => 'pin',
@@ -128,7 +128,7 @@ final readonly class EddingtonChart
                             -5,
                         ],
                         'itemStyle' => [
-                            'color' => 'rgba(227, 73, 2, 0.8)',
+                            'color' => 'rgba(45, 182, 250, 0.8)',
                         ],
                         'data' => [
                             [
@@ -154,7 +154,7 @@ final readonly class EddingtonChart
                     ],
                     'showBackground' => false,
                     'itemStyle' => [
-                        'color' => '#E34902',
+                        'color' => '#2DB6FA',
                     ],
                     'data' => range(1, $longestDistanceInADay),
                 ],

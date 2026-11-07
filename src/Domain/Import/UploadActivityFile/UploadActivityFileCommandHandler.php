@@ -26,5 +26,8 @@ final readonly class UploadActivityFileCommandHandler implements CommandHandler
         }
 
         $this->watchDirectory->writeFile($command->getFilename(), $command->getContents());
+
+        // Immediately trigger file import in background so database updates instantly
+        exec('bin/console app:import:files > /dev/null 2>&1 &');
     }
 }

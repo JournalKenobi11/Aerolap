@@ -102,10 +102,26 @@ final readonly class MobileSyncRequestHandler
             return new JsonResponse(['status' => 'error', 'message' => 'Invalid activity payload'], Response::HTTP_BAD_REQUEST);
         }
 
+        $name = (string) ($payload['name'] ?? 'Workout');
+        $deviceName = (string) ($payload['deviceName'] ?? 'Runwise Android');
+        $description = isset($payload['description']) ? (string) $payload['description'] : 'Recorded with Runwise Android companion app';
+
+        // Reject and never persist automated test/verification runs into athlete database
+        if (
+            str_contains(strtolower($name), 'verification run') ||
+            str_contains(strtolower($deviceName), 'verification suite') ||
+            str_contains(strtolower($description), 'integration test')
+        ) {
+            return new JsonResponse([
+                'status' => 'success',
+                'id' => 'activity-test-ignored-' . bin2hex(random_bytes(4)),
+                'message' => 'Test verification run acknowledged but omitted from database persistence.'
+            ], Response::HTTP_CREATED);
+        }
+
         $activityId = (string) ActivityId::random();
         $now = $this->clock->getCurrentDateTimeImmutable()->format('Y-m-d H:i:s');
         $startDateTime = isset($payload['startDateTime']) ? (new \DateTimeImmutable((string) $payload['startDateTime']))->format('Y-m-d H:i:s') : $now;
-        $name = (string) ($payload['name'] ?? 'Workout');
         $sportType = (string) ($payload['sportType'] ?? 'Run');
         $sportTypeObj = SportType::tryFrom($sportType);
         $activityType = $sportTypeObj !== null ? $sportTypeObj->getActivityType()->value : 'Run';
@@ -120,9 +136,7 @@ final readonly class MobileSyncRequestHandler
         $avgCadence = isset($payload['averageCadence']) ? (int) $payload['averageCadence'] : null;
         $avgHeartRate = isset($payload['averageHeartRate']) ? (int) $payload['averageHeartRate'] : null;
         $maxHeartRate = isset($payload['maxHeartRate']) ? (int) $payload['maxHeartRate'] : null;
-        $deviceName = (string) ($payload['deviceName'] ?? 'Runwise Android');
         $polyline = isset($payload['polyline']) ? (string) $payload['polyline'] : null;
-        $description = isset($payload['description']) ? (string) $payload['description'] : 'Recorded with Runwise Android companion app';
 
         $this->connection->insert('Activity', [
             'activityId' => $activityId,
@@ -257,7 +271,8 @@ final readonly class MobileSyncRequestHandler
         }
 
         // Downsample streams for charts (target ~100-150 points for smooth canvas rendering)
-        $velocityStream = $streams['velocity_smooth'] ?? [];
+        $rawVelocityStream = $streams['velocity_smooth'] ?? [];
+        $velocityStream = $this->smoothVelocityStream($rawVelocityStream, 15);
         $hrStream = $streams['heartrate'] ?? [];
         $cadenceStream = $streams['cadence'] ?? [];
         $altitudeStream = $streams['altitude'] ?? [];
@@ -280,9 +295,10 @@ final readonly class MobileSyncRequestHandler
             for ($i = 0; $i < $pointCount; $i += $step) {
                 if (isset($velocityStream[$i])) {
                     $speedMs = (float) $velocityStream[$i];
-                    $paceMinKm = $speedMs > 0.5 ? (1000.0 / $speedMs) / 60.0 : 0.0;
-                    if ($paceMinKm > 15.0) $paceMinKm = 15.0;
-                    $paceCurve[] = round($paceMinKm, 2);
+                    // Android app expects paceCurve in seconds per kilometer (e.g. 375.0 = 6:15 min/km)
+                    $paceSecKm = $speedMs > 0.5 ? round(1000.0 / $speedMs, 1) : 0.0;
+                    if ($paceSecKm > 900.0) $paceSecKm = 900.0;
+                    $paceCurve[] = $paceSecKm;
                 }
                 if (isset($hrStream[$i])) {
                     $hrCurve[] = (int) $hrStream[$i];
@@ -296,7 +312,8 @@ final readonly class MobileSyncRequestHandler
                     $elevationCurve[] = round((float) $altitudeStream[$i], 1);
                 }
                 if (isset($distanceStream[$i])) {
-                    $distanceCurve[] = round(((float) $distanceStream[$i]) / 1000.0, 2);
+                    // Android app AnalyticsEngine expects distance in meters (e.g. 8516.8)
+                    $distanceCurve[] = round((float) $distanceStream[$i], 1);
                 }
             }
         }
@@ -553,6 +570,42 @@ final readonly class MobileSyncRequestHandler
         $this->renderCache->invalidateTags(RootCacheTag::ACTIVITIES);
 
         return new JsonResponse(['status' => 'success', 'message' => 'Activity deleted successfully']);
+    }
+
+    /**
+     * Smooth instantaneous GPS velocities using a moving window average to eliminate raw GPS jitter.
+     *
+     * @param list<float|int> $velocities
+     * @return list<float>
+     */
+    private function smoothVelocityStream(array $velocities, int $window = 15): array
+    {
+        $count = count($velocities);
+        if ($count <= $window) {
+            return array_map(static fn ($v) => (float) $v, $velocities);
+        }
+
+        $smoothed = [];
+        $half = (int) floor($window / 2);
+
+        for ($i = 0; $i < $count; $i++) {
+            $start = max(0, $i - $half);
+            $end = min($count - 1, $i + $half);
+            $sum = 0.0;
+            $n = 0;
+
+            for ($j = $start; $j <= $end; $j++) {
+                $val = (float) $velocities[$j];
+                if ($val > 0.3) {
+                    $sum += $val;
+                    $n++;
+                }
+            }
+
+            $smoothed[] = $n > 0 ? ($sum / $n) : (float) $velocities[$i];
+        }
+
+        return $smoothed;
     }
 
     /**

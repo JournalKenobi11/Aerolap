@@ -57,7 +57,7 @@ final readonly class EddingtonHistoryChart
                     -15,
                 ],
                 'itemStyle' => [
-                    'color' => 'rgba(227, 73, 2, 0.8)',
+                    'color' => 'rgba(45, 182, 250, 0.8)',
                 ],
                 'label' => [
                     'color' => '#FFFFFF',
@@ -118,7 +118,7 @@ final readonly class EddingtonHistoryChart
                 [
                     'name' => 'Eddington',
                     'color' => [
-                        '#E34902',
+                        '#2DB6FA',
                     ],
                     'type' => 'line',
                     'smooth' => true,
@@ -139,7 +139,7 @@ final readonly class EddingtonHistoryChart
                             'color' => 'transparent',
                         ],
                         'label' => [
-                            'color' => '#E34902',
+                            'color' => '#2DB6FA',
                         ],
                         'data' => $markPoints,
                     ],

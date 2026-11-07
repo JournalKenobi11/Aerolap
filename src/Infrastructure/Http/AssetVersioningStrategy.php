@@ -22,7 +22,7 @@ final readonly class AssetVersioningStrategy implements VersionStrategyInterface
     public function getVersion(string $path): string
     {
         if (!$this->devMode->isEnabled()) {
-            return AppVersion::getSemanticVersion();
+            return AppVersion::getSemanticVersion() . '-aerolap-2';
         }
 
         return $this->uuidFactory->random();

@@ -48,7 +48,7 @@ final readonly class ActivityLocationsChart
                 'coordinateSystem' => 'geo',
                 'symbolSize' => 'callback:symbolSize',
                 'itemStyle' => [
-                    'color' => '#E34902',
+                    'color' => '#2DB6FA',
                 ],
                 'encode' => [
                     'tooltip' => 2,

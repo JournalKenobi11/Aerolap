@@ -34,8 +34,8 @@
 @theme {
     --font-sans: Inter, ui-sans-serif, system-ui;
     --text-xxs: 0.625rem;
-    --color-primary: #F26722;
-    --color-primary-soft: #FFF1E9;
+    --color-primary: #2DB6FA;
+    --color-primary-soft: #E1F5FE;
     --color-grey-yo: #cccccc;
 }
 
@@ -77,6 +77,14 @@
 
     .overflow-auto, .overflow-x-auto {
         @apply scrollbar-thin;
+    }
+
+    .border-l-sky-500, .border-l-primary {
+        border-left-color: var(--color-primary);
+    }
+
+    .bg-sky-500\/10, .bg-sky-500\/\[\.1\], .bg-primary\/10, .bg-primary\/\[\.1\] {
+        background-color: var(--color-primary-soft);
     }
 }
 

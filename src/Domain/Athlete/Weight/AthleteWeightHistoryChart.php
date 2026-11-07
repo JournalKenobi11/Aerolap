@@ -151,7 +151,7 @@ final readonly class AthleteWeightHistoryChart
                 [
                     'name' => $this->translator->trans('Weight'),
                     'color' => [
-                        '#E34902',
+                        '#2DB6FA',
                     ],
                     'type' => 'line',
                     'smooth' => false,

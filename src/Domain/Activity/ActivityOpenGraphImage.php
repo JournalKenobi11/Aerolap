@@ -40,7 +40,7 @@ final readonly class ActivityOpenGraphImage
     {
         $image = imagecreatetruecolor(self::WIDTH, self::HEIGHT);
         imagefill($image, 0, 0, $this->color($image, 0xFFFFFF));
-        imagefilledrectangle($image, 0, self::HEIGHT - 16, self::WIDTH, self::HEIGHT, $this->color($image, 0xFC5200));
+        imagefilledrectangle($image, 0, self::HEIGHT - 16, self::WIDTH, self::HEIGHT, $this->color($image, 0x2DB6FA));
 
         $dark = $this->color($image, 0x111827);
         $muted = $this->color($image, 0x6B7280);
