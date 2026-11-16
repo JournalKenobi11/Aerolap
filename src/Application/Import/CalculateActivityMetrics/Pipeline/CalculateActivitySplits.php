@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Application\Import\CalculateActivityMetrics\Pipeline;
 
+use App\Domain\Activity\ActivityCacheTag;
 use App\Domain\Activity\Split\ActivitySplitCalculator;
 use App\Domain\Activity\Split\ActivitySplitRepository;
 use App\Domain\Activity\Stream\ActivityStreamRepository;
+use App\Infrastructure\Cache\Render\RenderCache;
 use App\Infrastructure\Console\ProgressIndicator;
 use App\Infrastructure\Measurement\UnitSystem;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,6 +21,7 @@ final readonly class CalculateActivitySplits implements CalculateActivityMetrics
         private ActivitySplitRepository $activitySplitRepository,
         private ActivityStreamRepository $activityStreamRepository,
         private ActivitySplitCalculator $activitySplitCalculator,
+        private RenderCache $renderCache,
     ) {
     }
 
@@ -42,6 +45,8 @@ final readonly class CalculateActivitySplits implements CalculateActivityMetrics
             if (!$splitsCalculated) {
                 continue;
             }
+
+            $this->renderCache->invalidateTags(ActivityCacheTag::for($activityId));
 
             ++$countActivitiesProcessed;
             $progressIndicator->updateMessage(sprintf('=> Calculated splits for %d activities', $countActivitiesProcessed));

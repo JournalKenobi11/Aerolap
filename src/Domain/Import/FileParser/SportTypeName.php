@@ -16,6 +16,7 @@ final class SportTypeName
      */
     private const array ALIASES = [
         'running' => SportType::RUN,
+        'outdoorrunning' => SportType::RUN,
         'streetrunning' => SportType::RUN,
         'trackrunning' => SportType::RUN,
         'trailrunning' => SportType::TRAIL_RUN,
@@ -36,6 +37,7 @@ final class SportTypeName
         'ebiking' => SportType::E_BIKE_RIDE,
         'handcycling' => SportType::HAND_CYCLE,
         'walking' => SportType::WALK,
+        'outdoorwalking' => SportType::WALK,
         'casualwalking' => SportType::WALK,
         'speedwalking' => SportType::WALK,
         'hiking' => SportType::HIKE,
