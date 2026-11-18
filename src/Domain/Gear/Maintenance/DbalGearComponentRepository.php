@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Gear\Maintenance;
 
+use App\Domain\Gear\Maintenance\Task\MaintenanceTaskId;
 use App\Infrastructure\Eventing\EventBus;
 use App\Infrastructure\Exception\EntityNotFound;
 use App\Infrastructure\Repository\DbalRepository;
@@ -90,10 +91,78 @@ final readonly class DbalGearComponentRepository extends DbalRepository implemen
 
     public function findAll(): GearComponents
     {
+        $this->ensureComponentsForGears();
+
         return GearComponents::fromArray(array_map(
             $this->hydrate(...),
             $this->connection->executeQuery('SELECT * FROM GearComponent ORDER BY label ASC')->fetchAllAssociative(),
         ));
+    }
+
+    private function ensureComponentsForGears(): void
+    {
+        try {
+            $gears = $this->connection->executeQuery('SELECT gearId, name, isRetired, localImagePath FROM Gear')->fetchAllAssociative();
+            if ([] === $gears) {
+                return;
+            }
+
+            $existingComponents = $this->connection->executeQuery('SELECT gearComponentId, label, isRetired, localImagePath, installations FROM GearComponent')->fetchAllAssociative();
+            $coveredGears = [];
+            foreach ($existingComponents as $componentRow) {
+                $installations = Json::decode($componentRow['installations'] ?? '[]');
+                foreach ($installations as $inst) {
+                    if (isset($inst['parent']) && str_starts_with((string) $inst['parent'], 'gear:')) {
+                        $coveredGears[substr((string) $inst['parent'], 5)] = $componentRow;
+                    }
+                }
+            }
+
+            foreach ($gears as $gear) {
+                $gearId = (string) $gear['gearId'];
+                if (isset($coveredGears[$gearId])) {
+                    $row = $coveredGears[$gearId];
+                    if ($row['label'] !== $gear['name'] || (int) $row['isRetired'] !== (int) $gear['isRetired'] || $row['localImagePath'] !== $gear['localImagePath']) {
+                        $this->connection->executeStatement(
+                            'UPDATE GearComponent SET label = :label, isRetired = :isRetired, localImagePath = :localImagePath WHERE gearComponentId = :gearComponentId',
+                            [
+                                'label' => $gear['name'],
+                                'isRetired' => (int) $gear['isRetired'],
+                                'localImagePath' => $gear['localImagePath'],
+                                'gearComponentId' => $row['gearComponentId'],
+                            ]
+                        );
+                    }
+                    continue;
+                }
+
+                $componentId = (string) GearComponentId::random();
+                $tasks = [];
+
+                $installations = [
+                    [
+                        'parent' => 'gear:' . $gearId,
+                        'from' => null,
+                        'until' => null,
+                        'sportTypes' => [],
+                    ],
+                ];
+
+                $sql = 'INSERT INTO GearComponent (gearComponentId, label, localImagePath, purchasePriceAmount, purchasePriceCurrency, isRetired, notes, installations, maintenanceTasks)
+                        VALUES (:gearComponentId, :label, :localImagePath, NULL, NULL, :isRetired, NULL, :installations, :maintenanceTasks)';
+
+                $this->connection->executeStatement($sql, [
+                    'gearComponentId' => $componentId,
+                    'label' => $gear['name'],
+                    'localImagePath' => $gear['localImagePath'],
+                    'isRetired' => (int) $gear['isRetired'],
+                    'installations' => Json::encode($installations),
+                    'maintenanceTasks' => Json::encode($tasks),
+                ]);
+            }
+        } catch (\Throwable) {
+            // Failsafe in case Gear table does not exist or schema is in flux
+        }
     }
 
     /**

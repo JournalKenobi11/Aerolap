@@ -10,6 +10,7 @@ use App\Domain\Gear\GearId;
 use App\Domain\Gear\GearRepository;
 use App\Domain\Gear\GearStatus;
 use App\Domain\Gear\GearUsage;
+use App\Domain\Gear\Maintenance\GearComponentRepository;
 use App\Domain\Gear\UpdateGear\UpdateGear;
 use App\Domain\Import\ImportMode;
 use App\Infrastructure\Http\HtmlResponse;
@@ -26,6 +27,7 @@ final readonly class ManageGearFormRequestHandler
         private GearRepository $gearRepository,
         private GearUsage $gearUsage,
         private ImportMode $importMode,
+        private GearComponentRepository $gearComponentRepository,
     ) {
     }
 
@@ -36,6 +38,7 @@ final readonly class ManageGearFormRequestHandler
             'dispatchCommand' => AddGear::getCommandName(),
             'statuses' => GearStatus::cases(),
             'isDeletable' => false,
+            'initialTasks' => [],
         ]));
     }
 
@@ -44,11 +47,31 @@ final readonly class ManageGearFormRequestHandler
     {
         $gear = $this->gearRepository->find(GearId::fromString($gearId));
 
+        $initialTasks = [];
+        $gearComponents = $this->gearComponentRepository->findAll();
+        foreach ($gearComponents as $component) {
+            $installations = $component->getInstallations();
+            if (1 === count($installations) && (string) $installations->getFirst()?->getParent()->getGearId() === (string) $gear->getId()) {
+                foreach ($component->getMaintenanceTasks() as $task) {
+                    $initialTasks[] = [
+                        'id' => (string) $task->getId(),
+                        'label' => (string) $task->getLabel(),
+                        'interval' => [
+                            'value' => $task->getIntervalValue(),
+                            'unit' => $task->getIntervalUnit()->value,
+                        ],
+                    ];
+                }
+                break;
+            }
+        }
+
         return new HtmlResponse($this->twig->render('html/admin/page/gear/edit-gear.html.twig', [
             'dispatchCommand' => UpdateGear::getCommandName(),
             'gear' => $gear,
             'statuses' => GearStatus::cases(),
             'isDeletable' => $gear->isDeletableIn($this->importMode),
+            'initialTasks' => $initialTasks,
         ]));
     }
 

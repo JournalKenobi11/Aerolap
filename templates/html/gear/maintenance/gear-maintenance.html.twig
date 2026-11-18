@@ -17,6 +17,13 @@
                 title: "Register maintenance"|trans,
                 label: "Log maintenance"|trans({}, 'admin')
             } %}
+            {% include 'html/navigation/admin-edit-link.html.twig' with {
+                path: 'admin/gear/maintenance-logs',
+                redirectTo: 'gear/maintenance',
+                title: "View or delete past maintenance logs"|trans,
+                label: "Past maintenances"|trans({}, 'admin'),
+                icon: 'clock'
+            } %}
         {% endif %}
         {% include 'html/navigation/admin-edit-link.html.twig' with {
             path: 'admin/gear/maintenance-config',
@@ -40,7 +47,7 @@
                     <div>{{ "Gear"|trans }}</div>
                     <div>{{ "Name"|trans }}</div>
                     <div>{{ "Dist."|trans }}</div>
-                    <div class="hidden lg:block">{{ "Components"|trans }}</div>
+                    <div class="hidden lg:block">{{ "Components / Tasks"|trans }}</div>
                     <div></div>
                 </div>
                 {% for gearWithComponents in gearsWithComponents %}
@@ -62,7 +69,16 @@
                             </div>
                             <div class="text-sm font-bold text-gray-900">{{ gear.getDistance()|renderMeasurement(0) }}</div>
                             <div class="hidden lg:block text-sm text-gray-500 truncate">
-                                {{ componentsAttachedToGear|map(component => component.getLabel())|join(', ') }}
+                                {% set totalTasks = componentsAttachedToGear|reduce((carry, comp) => carry + comp.getMaintenanceTasks()|length, 0) %}
+                                {% if totalTasks > 0 %}
+                                    {% if componentsAttachedToGear|length == 1 and componentsAttachedToGear|first.getLabel() == gear.getName() %}
+                                        {{ componentsAttachedToGear|first.getMaintenanceTasks()|map(task => task.getLabel())|join(', ') }}
+                                    {% else %}
+                                        {{ componentsAttachedToGear|map(component => component.getLabel())|join(', ') }}
+                                    {% endif %}
+                                {% else %}
+                                    {{ "No tasks configured"|trans({}, 'admin') }}
+                                {% endif %}
                             </div>
                             <svg xmlns="http://www.w3.org/2000/svg" class="size-3 text-gray-400 transition-transform group-open/row:rotate-180" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="m1 1 4 4 4-4"/>
@@ -70,9 +86,22 @@
                         </summary>
                         <div class="px-8 py-5 border-t border-gray-100">
                             <div class="grid gap-2">
-                                {% for gearComponent in componentsAttachedToGear %}
-                                    {% include 'html/gear/maintenance/_gear-component.html.twig' with {gearComponent: gearComponent, maintenanceTaskStatuses: maintenanceTaskStatuses, installedOn: parentComponentLabels[gearComponent.getId() ~ ''] ?? null} only %}
-                                {% endfor %}
+                                {% if componentsAttachedToGear|length > 0 %}
+                                    {% for gearComponent in componentsAttachedToGear %}
+                                        {% include 'html/gear/maintenance/_gear-component.html.twig' with {gearComponent: gearComponent, maintenanceTaskStatuses: maintenanceTaskStatuses, installedOn: parentComponentLabels[gearComponent.getId() ~ ''] ?? null, gearId: gear.getId()} only %}
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="flex items-center justify-between text-sm text-gray-500 py-3">
+                                        <span>{{ "No maintenance tasks configured for this gear yet."|trans({}, 'admin') }}</span>
+                                        <a href="{{ relativeUrl(path('admin_edit_gear', {gearId: gear.getId()})) }}"
+                                           class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-primary text-white hover:brightness-95 shadow-xs transition">
+                                            <span>{{ "Configure tasks"|trans({}, 'admin') }}</span>
+                                            <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     </details>

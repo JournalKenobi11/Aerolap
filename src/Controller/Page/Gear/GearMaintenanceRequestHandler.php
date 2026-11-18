@@ -103,6 +103,13 @@ final readonly class GearMaintenanceRequestHandler
             }
         }
 
+        foreach ($gears->withoutRetired() as $gear) {
+            $gearsWithComponents[(string) $gear->getId()] ??= [
+                'gear' => $gear,
+                'components' => GearComponents::empty(),
+            ];
+        }
+
         return $this->twig->load('html/gear/maintenance/gear-maintenance.html.twig')->render([
             'gearsWithComponents' => array_values($gearsWithComponents),
             'componentsNotFitted' => $componentsNotFitted,

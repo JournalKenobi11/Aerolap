@@ -34,6 +34,7 @@ final readonly class ManageGearMaintenanceLogFormRequestHandler
         return new HtmlResponse($this->twig->render('html/admin/page/gear/maintenance/edit-gear-maintenance-log.html.twig', [
             'dispatchCommand' => AddGearMaintenanceLog::getCommandName(),
             'components' => $this->buildComponentOptions(),
+            'gears' => $this->gearRepository->findAll()->withoutRetired(),
         ]));
     }
 

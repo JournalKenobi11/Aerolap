@@ -16,6 +16,11 @@ final class Gears extends Collection
         return Gear::class;
     }
 
+    public function withoutRetired(): self
+    {
+        return $this->filter(static fn (Gear $gear): bool => !$gear->isRetired());
+    }
+
     public function sortByIsRetired(): self
     {
         return $this->usort(fn (Gear $a, Gear $b): int => $a->isRetired() <=> $b->isRetired());

@@ -6,6 +6,8 @@ namespace App\Domain\Gear\UpdateGear;
 
 use App\Domain\Gear\GearId;
 use App\Domain\Gear\GearStatus;
+use App\Domain\Gear\Maintenance\ParsesGearMaintenanceComponentPayload;
+use App\Domain\Gear\Maintenance\Task\MaintenanceTasks;
 use App\Domain\Gear\ProvidePurchasePriceFromPayload;
 use App\Domain\Image\NewImage;
 use App\Domain\Image\ProvideLocalImageFromDropZonePayload;
@@ -20,6 +22,7 @@ final readonly class UpdateGear extends DomainCommand implements DeserializableC
 {
     use ProvidePurchasePriceFromPayload;
     use ProvideLocalImageFromDropZonePayload;
+    use ParsesGearMaintenanceComponentPayload;
     use ProvidesCommandName;
 
     private function __construct(
@@ -29,6 +32,7 @@ final readonly class UpdateGear extends DomainCommand implements DeserializableC
         private ?Money $purchasePrice,
         private ?NewImage $newImage,
         private ?RemovedImage $removedImage,
+        private ?MaintenanceTasks $maintenanceTasks = null,
     ) {
     }
 
@@ -52,6 +56,10 @@ final readonly class UpdateGear extends DomainCommand implements DeserializableC
 
         [$newImages, $removedImages] = self::parseImages($payload, 'localImagePath');
 
+        $maintenanceTasks = isset($payload['maintenanceTasks'])
+            ? self::parseMaintenanceTasks($payload, generateMissingIds: true)
+            : null;
+
         return new self(
             gearId: GearId::fromString($payload['gearId']),
             name: $name,
@@ -59,6 +67,7 @@ final readonly class UpdateGear extends DomainCommand implements DeserializableC
             purchasePrice: self::parsePurchasePrice($payload),
             newImage: $newImages[0] ?? null,
             removedImage: $removedImages[0] ?? null,
+            maintenanceTasks: $maintenanceTasks,
         );
     }
 
@@ -90,5 +99,10 @@ final readonly class UpdateGear extends DomainCommand implements DeserializableC
     public function getRemovedImage(): ?RemovedImage
     {
         return $this->removedImage;
+    }
+
+    public function getMaintenanceTasks(): ?MaintenanceTasks
+    {
+        return $this->maintenanceTasks;
     }
 }

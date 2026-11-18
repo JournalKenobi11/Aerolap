@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Domain\Gear\AddGear;
 
 use App\Domain\Gear\GearStatus;
+use App\Domain\Gear\Maintenance\ParsesGearMaintenanceComponentPayload;
+use App\Domain\Gear\Maintenance\Task\MaintenanceTasks;
 use App\Domain\Gear\ProvidePurchasePriceFromPayload;
 use App\Domain\Image\NewImage;
 use App\Domain\Image\ProvideLocalImageFromDropZonePayload;
@@ -18,6 +20,7 @@ final readonly class AddGear extends DomainCommand implements DeserializableComm
 {
     use ProvidePurchasePriceFromPayload;
     use ProvideLocalImageFromDropZonePayload;
+    use ParsesGearMaintenanceComponentPayload;
     use ProvidesCommandName;
 
     private function __construct(
@@ -25,6 +28,7 @@ final readonly class AddGear extends DomainCommand implements DeserializableComm
         private bool $isRetired,
         private ?Money $purchasePrice,
         private ?NewImage $newImage,
+        private ?MaintenanceTasks $maintenanceTasks = null,
     ) {
     }
 
@@ -46,11 +50,16 @@ final readonly class AddGear extends DomainCommand implements DeserializableComm
 
         [$newImages] = self::parseImages($payload, 'localImagePath');
 
+        $maintenanceTasks = isset($payload['maintenanceTasks'])
+            ? self::parseMaintenanceTasks($payload, generateMissingIds: true)
+            : null;
+
         return new self(
             name: $name,
             isRetired: GearStatus::RETIRED === $gearStatus,
             purchasePrice: self::parsePurchasePrice($payload),
             newImage: $newImages[0] ?? null,
+            maintenanceTasks: $maintenanceTasks,
         );
     }
 
@@ -72,5 +81,10 @@ final readonly class AddGear extends DomainCommand implements DeserializableComm
     public function getNewImage(): ?NewImage
     {
         return $this->newImage;
+    }
+
+    public function getMaintenanceTasks(): ?MaintenanceTasks
+    {
+        return $this->maintenanceTasks;
     }
 }
