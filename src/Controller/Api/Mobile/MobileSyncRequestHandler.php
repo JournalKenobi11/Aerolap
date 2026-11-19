@@ -12,6 +12,7 @@ use App\Domain\Activity\Running\TrainingStress\TrainingStressService;
 use App\Domain\Activity\SportType\SportType;
 use App\Domain\Dashboard\Widget\TrainingLoad\TrainingMetrics;
 use App\Domain\Settings\SettingsRepository;
+use App\Domain\Geography\Dem\LocalDemService;
 use App\Infrastructure\Cache\Render\RenderCache;
 use App\Infrastructure\Cache\Tag\RootCacheTag;
 use App\Infrastructure\Serialization\Json;
@@ -37,6 +38,7 @@ final readonly class MobileSyncRequestHandler
         private Clock $clock,
         private RenderCache $renderCache,
         private TrainingStressService $trainingStressService,
+        private LocalDemService $localDemService,
     ) {
     }
 
@@ -143,6 +145,30 @@ final readonly class MobileSyncRequestHandler
         $avgHeartRate = isset($payload['averageHeartRate']) ? (int) $payload['averageHeartRate'] : null;
         $maxHeartRate = isset($payload['maxHeartRate']) ? (int) $payload['maxHeartRate'] : null;
         $polyline = isset($payload['polyline']) ? (string) $payload['polyline'] : null;
+
+        // Automatically resolve Copernicus 30m DEM elevation if client reported 0m
+        if ($elevation <= 0 && $polyline !== null && trim($polyline) !== '') {
+            try {
+                $coords = EncodedPolyline::fromString($polyline)->decodeAndPairLatLng();
+                if (!empty($coords)) {
+                    $elevs = $this->localDemService->lookupBatch($coords);
+                    $cleanElevs = [];
+                    $last = 0.0;
+                    foreach ($elevs as $e) {
+                        if ($e !== null) {
+                            $last = (float) $e;
+                        }
+                        $cleanElevs[] = $last;
+                    }
+                    if (!empty($cleanElevs)) {
+                        $smoothedElevs = $this->localDemService->smoothElevations($cleanElevs, 2);
+                        $elevation = (int) round($this->localDemService->computeElevationGain($smoothedElevs, 1.5));
+                    }
+                }
+            } catch (\Throwable) {
+                // Ignore polyline decode failures
+            }
+        }
 
         $this->connection->beginTransaction();
         try {
@@ -1081,84 +1107,101 @@ final readonly class MobileSyncRequestHandler
             return new JsonResponse(['status' => 'error', 'message' => 'Coordinates array required'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Downsample to max 500 points for Open-Meteo DEM batch
+        // Downsample to max 500 points
         $count = count($coordinates);
         $step = max(1, (int) ceil($count / 500.0));
-        $sampledIndices = [];
-        $lats = [];
-        $lngs = [];
+        $sampledCoordinates = [];
 
         for ($i = 0; $i < $count; $i += $step) {
             $pt = $coordinates[$i];
             if (isset($pt[0], $pt[1])) {
-                $lats[] = round((float) $pt[0], 5);
-                $lngs[] = round((float) $pt[1], 5);
-                $sampledIndices[] = $i;
+                $sampledCoordinates[] = [(float) $pt[0], (float) $pt[1]];
             }
         }
 
-        if (empty($lats)) {
+        if (empty($sampledCoordinates)) {
             return new JsonResponse(['status' => 'error', 'message' => 'No valid coordinates'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Chunk in batches of 100 to stay well within Open-Meteo URI length limit (< 2KB per request)
-        $batchSize = 100;
-        $elevations = [];
-        $ctx = stream_context_create([
-            'http' => [
-                'timeout' => 8,
-                'header' => "User-Agent: Dreeve-Runwise-Elevation/1.0\r\n"
-            ]
-        ]);
+        // 1. First attempt microsecond local lookup via Palghar Copernicus 30m DEM
+        $localElevations = $this->localDemService->lookupBatch($sampledCoordinates);
+        $missingIndices = [];
+        $missingLats = [];
+        $missingLngs = [];
 
-        for ($b = 0; $b < count($lats); $b += $batchSize) {
-            $batchLats = array_slice($lats, $b, $batchSize);
-            $batchLngs = array_slice($lngs, $b, $batchSize);
-            $url = 'https://api.open-meteo.com/v1/elevation?latitude=' . implode(',', $batchLats) . '&longitude=' . implode(',', $batchLngs);
-            $resp = @file_get_contents($url, false, $ctx);
-            if ($resp !== false) {
-                $demData = json_decode($resp, true);
-                if (isset($demData['elevation']) && is_array($demData['elevation'])) {
-                    foreach ($demData['elevation'] as $e) {
-                        $elevations[] = (float) $e;
-                    }
-                }
+        foreach ($localElevations as $idx => $elev) {
+            if ($elev === null) {
+                $missingIndices[] = $idx;
+                $missingLats[] = round($sampledCoordinates[$idx][0], 5);
+                $missingLngs[] = round($sampledCoordinates[$idx][1], 5);
             }
         }
 
-        if (empty($elevations)) {
+        $elevations = $localElevations;
+        $provider = 'copernicus_30m_local';
+
+        // 2. Fall back to Open-Meteo DEM API only for points outside Palghar DEM bounding box
+        if (!empty($missingIndices)) {
+            $batchSize = 100;
+            $fallbackElevations = [];
+            $ctx = stream_context_create([
+                'http' => [
+                    'timeout' => 8,
+                    'header' => "User-Agent: Dreeve-Runwise-Elevation/1.0\r\n"
+                ]
+            ]);
+
+            for ($b = 0; $b < count($missingLats); $b += $batchSize) {
+                $batchLats = array_slice($missingLats, $b, $batchSize);
+                $batchLngs = array_slice($missingLngs, $b, $batchSize);
+                $url = 'https://api.open-meteo.com/v1/elevation?latitude=' . implode(',', $batchLats) . '&longitude=' . implode(',', $batchLngs);
+                $resp = @file_get_contents($url, false, $ctx);
+                if ($resp !== false) {
+                    $demData = json_decode($resp, true);
+                    if (isset($demData['elevation']) && is_array($demData['elevation'])) {
+                        foreach ($demData['elevation'] as $e) {
+                            $fallbackElevations[] = (float) $e;
+                        }
+                    }
+                }
+            }
+
+            if (count($fallbackElevations) === count($missingIndices)) {
+                foreach ($missingIndices as $k => $origIdx) {
+                    $elevations[$origIdx] = $fallbackElevations[$k];
+                }
+                $provider = (count($missingIndices) === count($sampledCoordinates))
+                    ? 'open_meteo'
+                    : 'copernicus_30m_local+open_meteo';
+            }
+        }
+
+        // Fill any stubborn nulls with previous known elevation or 0.0
+        $finalElevations = [];
+        $lastValid = 0.0;
+        foreach ($elevations as $val) {
+            if ($val !== null) {
+                $lastValid = (float) $val;
+            }
+            $finalElevations[] = $lastValid;
+        }
+
+        if (empty($finalElevations)) {
             return new JsonResponse(['status' => 'error', 'message' => 'DEM lookup unavailable'], Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
         // Apply centered zero-phase moving average smoothing to eliminate DEM discretization steps
-        $smoothed = [];
-        $n = count($elevations);
-        for ($i = 0; $i < $n; $i++) {
-            $window = [];
-            for ($k = max(0, $i - 2); $k <= min($n - 1, $i + 2); $k++) {
-                $window[] = (float) $elevations[$k];
-            }
-            $smoothed[] = round(array_sum($window) / count($window), 1);
-        }
+        $smoothed = $this->localDemService->smoothElevations($finalElevations, 2);
 
         // Compute verified climbing elevation gain (1.5m hysteresis)
-        $gain = 0.0;
-        $ref = $smoothed[0] ?? 0.0;
-        foreach ($smoothed as $alt) {
-            $diff = $alt - $ref;
-            if ($diff >= 1.5) {
-                $gain += $diff;
-                $ref = $alt;
-            } elseif ($ref - $alt >= 1.5) {
-                $ref = $alt;
-            }
-        }
+        $gain = $this->localDemService->computeElevationGain($smoothed, 1.5);
 
         $minAlt = !empty($smoothed) ? min($smoothed) : 0.0;
         $maxAlt = !empty($smoothed) ? max($smoothed) : 0.0;
 
         return new JsonResponse([
             'status' => 'success',
+            'provider' => $provider,
             'elevationGainMeters' => (int) round($gain),
             'minAltitude' => $minAlt,
             'maxAltitude' => $maxAlt,
