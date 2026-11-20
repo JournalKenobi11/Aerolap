@@ -180,10 +180,42 @@ final class LocalDemService
     }
 
     /**
+     * Compute approximate geographic track distance in meters via Haversine formula
+     *
+     * @param array<int, array{0: float|int, 1: float|int}|array{float|int, float|int}> $coordinates
+     */
+    public function computeRouteDistance(array $coordinates): float
+    {
+        $total = 0.0;
+        $n = count($coordinates);
+        for ($i = 1; $i < $n; $i++) {
+            $p0 = $coordinates[$i - 1];
+            $p1 = $coordinates[$i];
+            if (!isset($p0[0], $p0[1], $p1[0], $p1[1])) {
+                continue;
+            }
+
+            $lat1 = deg2rad((float) $p0[0]);
+            $lon1 = deg2rad((float) $p0[1]);
+            $lat2 = deg2rad((float) $p1[0]);
+            $lon2 = deg2rad((float) $p1[1]);
+
+            $dlat = $lat2 - $lat1;
+            $dlon = $lon2 - $lon1;
+
+            $a = sin($dlat / 2.0) ** 2 + cos($lat1) * cos($lat2) * (sin($dlon / 2.0) ** 2);
+            $c = 2.0 * atan2(sqrt($a), sqrt(max(0.0, 1.0 - $a)));
+            $total += 6371000.0 * $c;
+        }
+
+        return $total;
+    }
+
+    /**
      * @param float[] $elevations
      * @return float[]
      */
-    public function smoothElevations(array $elevations, int $windowRadius = 2): array
+    public function smoothElevations(array $elevations, int $windowRadius = 8): array
     {
         $n = count($elevations);
         if ($n === 0) {
@@ -194,7 +226,7 @@ final class LocalDemService
             return array_map(fn ($e) => round((float) $e, 1), $elevations);
         }
 
-        $effectiveRadius = ($n <= 6) ? 1 : $windowRadius;
+        $effectiveRadius = min($windowRadius, (int) floor(($n - 1) / 2));
 
         $smoothed = [];
         for ($i = 0; $i < $n; $i++) {
@@ -210,10 +242,11 @@ final class LocalDemService
 
     /**
      * Compute verified climbing elevation gain with hysteresis
+     * (Default 3.0m hysteresis standard for 30m DEM satellite raster to ignore canopy/roof noise)
      *
      * @param float[] $elevations
      */
-    public function computeElevationGain(array $elevations, float $hysteresisMeters = 1.5): float
+    public function computeElevationGain(array $elevations, float $hysteresisMeters = 3.0): float
     {
         if (empty($elevations)) {
             return 0.0;

@@ -161,8 +161,12 @@ final readonly class MobileSyncRequestHandler
                         $cleanElevs[] = $last;
                     }
                     if (!empty($cleanElevs)) {
-                        $smoothedElevs = $this->localDemService->smoothElevations($cleanElevs, 2);
-                        $elevation = (int) round($this->localDemService->computeElevationGain($smoothedElevs, 1.5));
+                        $totalDist = $this->localDemService->computeRouteDistance($coords);
+                        $n = count($coords);
+                        $spacing = ($totalDist > 0 && $n > 1) ? $totalDist / ($n - 1) : 15.0;
+                        $windowRadius = max(2, (int) round(95.0 / max(1.0, $spacing)));
+                        $smoothedElevs = $this->localDemService->smoothElevations($cleanElevs, $windowRadius);
+                        $elevation = (int) round($this->localDemService->computeElevationGain($smoothedElevs, 3.0));
                     }
                 }
             } catch (\Throwable) {
@@ -1190,11 +1194,17 @@ final readonly class MobileSyncRequestHandler
             return new JsonResponse(['status' => 'error', 'message' => 'DEM lookup unavailable'], Response::HTTP_SERVICE_UNAVAILABLE);
         }
 
-        // Apply centered zero-phase moving average smoothing to eliminate DEM discretization steps
-        $smoothed = $this->localDemService->smoothElevations($finalElevations, 2);
+        // Target ~180-200m spatial smoothing window across geographic coordinates
+        $totalDist = $this->localDemService->computeRouteDistance($sampledCoordinates);
+        $n = count($sampledCoordinates);
+        $spacing = ($totalDist > 0 && $n > 1) ? $totalDist / ($n - 1) : 15.0;
+        $windowRadius = max(2, (int) round(95.0 / max(1.0, $spacing)));
 
-        // Compute verified climbing elevation gain (1.5m hysteresis)
-        $gain = $this->localDemService->computeElevationGain($smoothed, 1.5);
+        // Apply centered zero-phase moving average smoothing to eliminate DEM raster & building/canopy steps
+        $smoothed = $this->localDemService->smoothElevations($finalElevations, $windowRadius);
+
+        // Compute verified climbing elevation gain (3.0m hysteresis standard)
+        $gain = $this->localDemService->computeElevationGain($smoothed, 3.0);
 
         $minAlt = !empty($smoothed) ? min($smoothed) : 0.0;
         $maxAlt = !empty($smoothed) ? max($smoothed) : 0.0;
